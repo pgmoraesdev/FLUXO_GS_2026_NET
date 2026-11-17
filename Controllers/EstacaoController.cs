@@ -1,104 +1,119 @@
-
-using Microsoft.AspNetCore.Http;
+using System.ComponentModel.DataAnnotations;
 using Fluxo_GS_2026_2TDSPR.Data;
 using Fluxo_GS_2026_2TDSPR.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace Fluxo_GS_2026_2TDSPR.Controllers
+namespace Fluxo_GS_2026_2TDSPR.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class EstacaoController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class EstacaoController : ControllerBase
+    private readonly AppDbContext dbContext;
+
+    public EstacaoController(AppDbContext dbContext)
     {
-        private readonly AppDbContext dbContext;
+        this.dbContext = dbContext;
+    }
 
-        public EstacaoController(AppDbContext _dbContext)
+    public record EstacaoInput([Required, StringLength(2000)] string Nome);
+
+    public record EstacaoResponse(int Id, string Nome);
+
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<EstacaoResponse>>> GetAll(CancellationToken cancellationToken)
+    {
+        var estacoes = await dbContext.Estacoes
+            .AsNoTracking()
+            .OrderBy(estacao => estacao.Id)
+            .Select(estacao => new EstacaoResponse(estacao.Id, estacao.Nome))
+            .ToListAsync(cancellationToken);
+
+        return Ok(estacoes);
+    }
+
+    [HttpGet("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<EstacaoResponse>> GetById(int id, CancellationToken cancellationToken)
+    {
+        var estacao = await dbContext.Estacoes
+            .AsNoTracking()
+            .Where(estacao => estacao.Id == id)
+            .Select(estacao => new EstacaoResponse(estacao.Id, estacao.Nome))
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (estacao is null)
         {
-            dbContext = _dbContext;
+            return Problem(statusCode: StatusCodes.Status404NotFound, detail: "Estação não encontrada.");
         }
 
-        [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetAll()
+        return Ok(estacao);
+    }
+
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<EstacaoResponse>> Create(EstacaoInput input, CancellationToken cancellationToken)
+    {
+        var estacao = new Estacao { Nome = input.Nome.Trim() };
+        dbContext.Estacoes.Add(estacao);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return CreatedAtAction(nameof(GetById), new { id = estacao.Id }, new EstacaoResponse(estacao.Id, estacao.Nome));
+    }
+
+    [HttpPut("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Update(int id, EstacaoInput input, CancellationToken cancellationToken)
+    {
+        var estacao = await dbContext.Estacoes.FindAsync(new object[] { id }, cancellationToken);
+        if (estacao is null)
         {
-            var estacoes = await dbContext.Estacoes.ToListAsync();
-
-            if (estacoes == null || estacoes.Count == 0)
-            {
-                return NotFound("Nenhuma estação encontrada.");
-            }
-
-            return Ok(estacoes);
+            return Problem(statusCode: StatusCodes.Status404NotFound, detail: "Estação não encontrada.");
         }
 
-        [HttpGet("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetById(int id)
+        estacao.Nome = input.Nome.Trim();
+
+        try
         {
-            var estacao = await dbContext.Estacoes.FindAsync(id);
-
-            if (estacao == null)
-            {
-                return NotFound("Estação não encontrada.");
-            }
-
-            return Ok(estacao);
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Problem(statusCode: StatusCodes.Status404NotFound, detail: "Estação não encontrada.");
         }
 
-        [HttpPost]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        public async Task<IActionResult> Create(Estacao estacaoToSave)
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    {
+        var estacao = await dbContext.Estacoes.FindAsync(new object[] { id }, cancellationToken);
+        if (estacao is null)
         {
-            dbContext.Estacoes.Add(estacaoToSave);
-
-            await dbContext.SaveChangesAsync();
-
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = estacaoToSave.Id },
-                estacaoToSave
-            );
+            return Problem(statusCode: StatusCodes.Status404NotFound, detail: "Estação não encontrada.");
         }
 
-        [HttpPut("{id}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Update(int id, Estacao estacaoToUpdate)
+        dbContext.Estacoes.Remove(estacao);
+
+        try
         {
-            var estacaoToChange = await dbContext.Estacoes.FindAsync(id);
-
-            if (estacaoToChange == null)
-            {
-                return NotFound("Estação não encontrada.");
-            }
-
-            estacaoToChange.Nome = estacaoToUpdate.Nome;
-
-            await dbContext.SaveChangesAsync();
-
-            return NoContent();
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Problem(statusCode: StatusCodes.Status404NotFound, detail: "Estação não encontrada.");
         }
 
-        [HttpDelete("{id}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var estacao = await dbContext.Estacoes.FindAsync(id);
-
-            if (estacao == null)
-            {
-                return NotFound("Estação não encontrada.");
-            }
-
-            dbContext.Estacoes.Remove(estacao);
-
-            await dbContext.SaveChangesAsync();
-
-            return NoContent();
-        }
+        return NoContent();
     }
 }

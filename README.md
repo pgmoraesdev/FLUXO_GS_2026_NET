@@ -74,3 +74,20 @@ por último. Execute somente no banco/schema de teste confirmado.
 
 Não é necessária uma nova migration para esse CRUD: a entidade, a chave
 estrangeira e o índice único `(TremId, Posicao)` já estão versionados.
+
+## Contrato de estação
+
+`POST /api/Estacao` e `PUT /api/Estacao/{id}` recebem apenas os dados
+`{"nome":"Estação Central"}`. O nome é obrigatório, deve ter até 2000 caracteres
+e é salvo sem espaços nas pontas. Nome ausente, nulo, vazio, somente com espaços
+ou acima do limite retorna `400` com erros de validação em JSON.
+
+As respostas de cadastro e consulta de estação contêm apenas `id` e `nome`.
+Campos adicionais de entrada, como `id` e `plataformas`, não são usados para
+cadastrar a estação; as plataformas são cadastradas pela rota própria.
+A listagem retorna `200` com `[]` quando não existem estações, e os registros
+são ordenados por ID. Recurso inexistente retorna `404` em JSON Problem Details.
+O cadastro retorna `201` com `Location`; alteração e exclusão retornam `204`.
+
+A coleção Postman inclui verificações de nome inválido no cadastro e na alteração.
+Essas mudanças não exigem migration: o limite segue a coluna Oracle existente.
