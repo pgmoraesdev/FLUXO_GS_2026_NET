@@ -19,7 +19,7 @@ dotnet ef database update
 dotnet run
 ```
 
-O comando `dotnet ef database update` aplica as migrations pendentes. Elas criam as tabelas de estações, plataformas, trens e vagões.
+O comando `dotnet ef database update` aplica as migrations pendentes. Elas criam as tabelas de estações, plataformas, trens, vagões e paradas programadas.
 
 ## Como testar no Postman
 
@@ -91,3 +91,44 @@ O cadastro retorna `201` com `Location`; alteração e exclusão retornam `204`.
 
 A coleção Postman inclui verificações de nome inválido no cadastro e na alteração.
 Essas mudanças não exigem migration: o limite segue a coluna Oracle existente.
+
+## Paradas programadas e próxima chegada
+
+Uma parada representa uma passagem específica de um trem por uma plataforma.
+O mesmo trem pode ter várias paradas na mesma plataforma, em horários diferentes.
+Após atualizar o código, aplique a migration `AddParadasProgramadas` no seu
+schema de teste com `dotnet ef database update`.
+
+`/api/ParadaProgramada` aceita `GET` de lista e `POST`; com `/{id}`, aceita
+`GET`, `PUT` e `DELETE`. Exemplo de corpo para cadastro e alteração:
+
+```json
+{
+  "tremId": 1,
+  "plataformaId": 1,
+  "chegadaPrevistaEm": "2026-11-18T15:00:00Z",
+  "chegadaRealEm": null
+}
+```
+
+Use IDs existentes e ajuste a data para o futuro ao testar a próxima chegada.
+Os horários devem ser enviados em UTC, com sufixo `Z`. A chegada prevista é
+obrigatória, e a real é opcional. Horários sem fuso ou IDs não positivos retornam
+`400` JSON. Trem, plataforma ou parada inexistente retorna `404` JSON.
+O cadastro retorna `201` com `Location`; alteração e exclusão retornam `204`.
+O `PUT` substitui os quatro campos; envie `null` para limpar a chegada real.
+
+`GET /api/Plataforma/{id}/proxima-chegada` retorna a parada com menor horário
+previsto maior ou igual ao UTC atual e sem chegada real registrada. Em empate,
+usa o menor ID. Retorna `404` se a plataforma não existir ou não tiver chegada
+futura pendente. No MVP, uma parada atrasada cujo horário previsto já passou
+não aparece nessa consulta; atualize sua previsão pelo `PUT` quando necessário.
+
+A resposta contém `id`, `tremId`, `plataformaId`, `chegadaPrevistaEm` e
+`chegadaRealEm`. Os horários retornam com `Z`; o Oracle os guarda como UTC em
+`TIMESTAMP`, sem fuso. A listagem geral é ordenada por previsão e ID.
+
+Paradas impedem a exclusão do trem, da plataforma e da estação vinculada,
+retornando `409` JSON. Exclua as paradas antes desses cadastros. A coleção
+Postman inclui duas passagens, consulta da próxima chegada e avanço para a
+seguinte após registrar a chegada real. A limpeza respeita os vínculos.

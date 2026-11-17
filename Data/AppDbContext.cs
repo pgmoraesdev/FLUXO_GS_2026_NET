@@ -14,6 +14,8 @@ namespace Fluxo_GS_2026_2TDSPR.Data
         public DbSet<Trem> Trens { get; set; }
         public DbSet<Vagao> Vagoes { get; set; }
 
+        public DbSet<ParadaProgramada> ParadasProgramadas { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Estacao>().ToTable("TBL_ESTACOES_2TDSPR");
@@ -39,6 +41,16 @@ namespace Fluxo_GS_2026_2TDSPR.Data
                 vagao.HasOne(v => v.Trem)
                     .WithMany(t => t.Vagoes)
                     .HasForeignKey(v => v.TremId);
+            });
+
+            modelBuilder.Entity<ParadaProgramada>(parada =>
+            {
+                parada.ToTable("TBL_PARADAS_2TDSPR");
+                parada.HasIndex(p => new { p.PlataformaId, p.ChegadaPrevistaEm });
+                parada.HasOne(p => p.Trem).WithMany().HasForeignKey(p => p.TremId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                parada.HasOne(p => p.Plataforma).WithMany().HasForeignKey(p => p.PlataformaId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             base.OnModelCreating(modelBuilder);

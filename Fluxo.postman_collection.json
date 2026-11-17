@@ -39,6 +39,26 @@
       "key": "vagao3Id",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "parada1Id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "parada2Id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "prevista1",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "prevista2",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -933,52 +953,6 @@
               }
             }
           }
-        },
-        {
-          "name": "Excluir plataforma de teste",
-          "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"plataformaId\") || \"\"))) {",
-                  "    console.warn(\"Execute primeiro o cadastro que preenche plataformaId.\");",
-                  "    pm.execution.skipRequest();",
-                  "}"
-                ]
-              }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"HTTP 204\", function () {",
-                  "    pm.response.to.have.status(204);",
-                  "});",
-                  "if (pm.response.code === 204) {",
-                  "    pm.collectionVariables.unset(\"plataformaId\");",
-                  "}"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/Plataforma/{{plataformaId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "Plataforma",
-                "{{plataformaId}}"
-              ]
-            }
-          }
         }
       ]
     },
@@ -1567,6 +1541,386 @@
               }
             }
           }
+        }
+      ]
+    },
+    {
+      "name": "Paradas programadas",
+      "item": [
+        {
+          "name": "Cadastrar parada 1",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.unset(\"parada1Id\");",
+                  "pm.collectionVariables.set(\"prevista1\", new Date(Date.now() + 1 * 3600000).toISOString());",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"tremId\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"plataformaId\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) pm.collectionVariables.set(\"parada1Id\", String(pm.response.json().id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ParadaProgramada",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tremId\": {{tremId}}, \"plataformaId\": {{plataformaId}}, \"chegadaPrevistaEm\": \"{{prevista1}}\", \"chegadaRealEm\": null}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cadastrar parada 2",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.unset(\"parada2Id\");",
+                  "pm.collectionVariables.set(\"prevista2\", new Date(Date.now() + 2 * 3600000).toISOString());",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"tremId\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"plataformaId\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) pm.collectionVariables.set(\"parada2Id\", String(pm.response.json().id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ParadaProgramada",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tremId\": {{tremId}}, \"plataformaId\": {{plataformaId}}, \"chegadaPrevistaEm\": \"{{prevista2}}\", \"chegadaRealEm\": null}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Consultar próxima chegada",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"parada1Id\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"parada2Id\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Primeira passagem\", () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"parada1Id\"))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/Plataforma/{{plataformaId}}/proxima-chegada"
+          }
+        },
+        {
+          "name": "Consultar parada por ID",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"parada1Id\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/ParadaProgramada/{{parada1Id}}"
+          }
+        },
+        {
+          "name": "Listar paradas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/ParadaProgramada"
+          }
+        },
+        {
+          "name": "Registrar chegada real",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"parada1Id\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"tremId\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"plataformaId\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ParadaProgramada/{{parada1Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tremId\": {{tremId}}, \"plataformaId\": {{plataformaId}}, \"chegadaPrevistaEm\": \"{{prevista1}}\", \"chegadaRealEm\": \"{{prevista1}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Consultar chegada seguinte",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"parada2Id\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Segunda passagem\", () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"parada2Id\"))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/Plataforma/{{plataformaId}}/proxima-chegada"
+          }
+        },
+        {
+          "name": "Rejeitar previsão sem fuso",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"tremId\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"plataformaId\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ParadaProgramada",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tremId\": {{tremId}}, \"plataformaId\": {{plataformaId}}, \"chegadaPrevistaEm\": \"2026-11-18T15:00:00\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Impedir exclusão de trem com parada",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"parada1Id\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"tremId\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/Trem/{{tremId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Limpeza",
+      "item": [
+        {
+          "name": "Excluir parada 1",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"parada1Id\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/ParadaProgramada/{{parada1Id}}"
+          }
+        },
+        {
+          "name": "Excluir parada 2",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"parada2Id\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/ParadaProgramada/{{parada2Id}}"
+          }
         },
         {
           "name": "Excluir vagão 1",
@@ -1679,12 +2033,53 @@
             "header": [],
             "url": "{{baseUrl}}/api/Vagao/{{vagao1Id}}"
           }
-        }
-      ]
-    },
-    {
-      "name": "Limpeza",
-      "item": [
+        },
+        {
+          "name": "Excluir plataforma de teste",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"plataformaId\") || \"\"))) {",
+                  "    console.warn(\"Execute primeiro o cadastro que preenche plataformaId.\");",
+                  "    pm.execution.skipRequest();",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});",
+                  "if (pm.response.code === 204) {",
+                  "    pm.collectionVariables.unset(\"plataformaId\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Plataforma/{{plataformaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Plataforma",
+                "{{plataformaId}}"
+              ]
+            }
+          }
+        },
         {
           "name": "Excluir trem de teste",
           "event": [
