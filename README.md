@@ -408,3 +408,12 @@ registra a ação e encerra o alerta. A limpeza exclui o alerta antes da parada.
 O sistema apenas apoia a avaliação pelo Centro de Controle Operacional: a
 solicitação de reforço é uma decisão humana. Não há comando automático de trem
 reserva, autenticação do operador ou painel visual nesta etapa.
+
+## Demonstração da entrega
+
+Siga [DEMONSTRACAO.md](DEMONSTRACAO.md) para o roteiro de apresentação, a coleção
+`Fluxo.demonstracao.postman_collection.json` e a comparação simulada de
+distribuição entre vagões. Essa coleção separada prepara o cenário 300/180,
+mostra a sinalização, gera o alerta, registra a ação do operador e oferece uma
+pasta de limpeza. A coleção `Fluxo.postman_collection.json` continua disponível
+para testar os CRUDs e as validações de forma mais ampla.
