@@ -40,6 +40,35 @@ namespace Fluxo_GS_2026_2TDSPR.Migrations
                     b.ToTable("TBL_ESTACOES_2TDSPR", (string)null);
                 });
 
+            modelBuilder.Entity("Fluxo_GS_2026_2TDSPR.Models.MedicaoPlataforma", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("MedidaEm")
+                        .HasColumnType("TIMESTAMP(7)");
+
+                    b.Property<string>("Origem")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)");
+
+                    b.Property<int>("PlataformaId")
+                        .HasColumnType("NUMBER(10)");
+
+                    b.Property<int>("QuantidadePessoas")
+                        .HasColumnType("NUMBER(10)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlataformaId", "MedidaEm");
+
+                    b.ToTable("TBL_MED_PLATAFORMA_2TDSPR", (string)null);
+                });
+
             modelBuilder.Entity("Fluxo_GS_2026_2TDSPR.Models.ParadaProgramada", b =>
                 {
                     b.Property<int>("Id")
@@ -139,6 +168,15 @@ namespace Fluxo_GS_2026_2TDSPR.Migrations
                         .IsUnique();
 
                     b.ToTable("TBL_VAGOES_2TDSPR", (string)null);
+                });
+
+            modelBuilder.Entity("Fluxo_GS_2026_2TDSPR.Models.MedicaoPlataforma", b =>
+                {
+                    b.HasOne("Fluxo_GS_2026_2TDSPR.Models.Plataforma", null)
+                        .WithMany()
+                        .HasForeignKey("PlataformaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Fluxo_GS_2026_2TDSPR.Models.ParadaProgramada", b =>

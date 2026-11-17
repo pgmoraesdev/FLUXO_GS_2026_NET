@@ -16,6 +16,8 @@ namespace Fluxo_GS_2026_2TDSPR.Data
 
         public DbSet<ParadaProgramada> ParadasProgramadas { get; set; }
 
+        public DbSet<MedicaoPlataforma> MedicoesPlataforma { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Estacao>().ToTable("TBL_ESTACOES_2TDSPR");
@@ -50,6 +52,15 @@ namespace Fluxo_GS_2026_2TDSPR.Data
                 parada.HasOne(p => p.Trem).WithMany().HasForeignKey(p => p.TremId)
                     .OnDelete(DeleteBehavior.Restrict);
                 parada.HasOne(p => p.Plataforma).WithMany().HasForeignKey(p => p.PlataformaId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<MedicaoPlataforma>(medicao =>
+            {
+                medicao.ToTable("TBL_MED_PLATAFORMA_2TDSPR");
+                medicao.Property(m => m.Origem).HasMaxLength(50).IsRequired();
+                medicao.HasIndex(m => new { m.PlataformaId, m.MedidaEm });
+                medicao.HasOne<Plataforma>().WithMany().HasForeignKey(m => m.PlataformaId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 

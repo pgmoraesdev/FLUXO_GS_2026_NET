@@ -113,7 +113,7 @@ public class EstacaoController : ControllerBase
         }
         catch (DbUpdateException ex) when (ex.InnerException is OracleException { Number: 2292 })
         {
-            return Problem(statusCode: 409, detail: "Existem paradas programadas vinculadas. Remova as paradas antes de excluir este recurso.");
+            return Problem(statusCode: 409, detail: "Existem paradas ou medições vinculadas. Remova esses registros antes de excluir este recurso.");
         }
         catch (DbUpdateConcurrencyException)
         {

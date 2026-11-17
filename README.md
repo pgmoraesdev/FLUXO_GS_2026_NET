@@ -132,3 +132,54 @@ Paradas impedem a exclusão do trem, da plataforma e da estação vinculada,
 retornando `409` JSON. Exclua as paradas antes desses cadastros. A coleção
 Postman inclui duas passagens, consulta da próxima chegada e avanço para a
 seguinte após registrar a chegada real. A limpeza respeita os vínculos.
+
+## Ocupação simulada da plataforma
+
+`MedicaoPlataforma` guarda a quantidade estimada de pessoas presentes na área de
+embarque. Essa medida é separada das entradas e saídas nos acessos da estação.
+Não é necessário enviar imagens ou vídeos: nesta etapa os dados são simulados.
+
+Após atualizar o código, aplique a migration `AddMedicoesPlataforma` no seu
+schema de teste com `dotnet ef database update`.
+
+Exemplo de `POST /api/MedicaoPlataforma` (use uma plataforma existente e ajuste
+`medidaEm` para um horário UTC atual ou passado):
+
+```json
+{
+  "plataformaId": 1,
+  "quantidadePessoas": 300,
+  "medidaEm": "2026-11-17T15:00:00Z",
+  "origem": "Simulacao"
+}
+```
+
+O cadastro retorna `201`, o cabeçalho `Location` e a medição com seu `id`.
+A quantidade é obrigatória e pode ser zero; valores negativos são inválidos.
+O horário é obrigatório, deve usar UTC com sufixo `Z` e não pode estar no futuro.
+A origem é obrigatória, tem até 50 caracteres e é salva sem espaços nas pontas.
+Entrada inválida retorna `400` JSON; plataforma inexistente retorna `404` JSON.
+
+Rotas disponíveis:
+
+| Método | Rota | Resultado no sucesso |
+|---|---|---|
+| GET | `/api/MedicaoPlataforma` | `200`, histórico do horário mais recente ao mais antigo; `[]` se vazio |
+| GET | `/api/MedicaoPlataforma/{id}` | `200`, medição por ID |
+| POST | `/api/MedicaoPlataforma` | `201`, cadastra uma leitura |
+| PUT | `/api/MedicaoPlataforma/{id}` | `204`, corrige a leitura com os mesmos quatro campos |
+| DELETE | `/api/MedicaoPlataforma/{id}` | `204`, exclui a leitura |
+| GET | `/api/Plataforma/{id}/ultima-ocupacao` | `200`, última leitura daquela plataforma |
+
+As operações por ID retornam `404` se a medição não existir. A consulta da última
+ocupação também retorna `404` se a plataforma não existir ou não tiver medições.
+Ela usa o maior `medidaEm` que não esteja no futuro e, em empate, o maior ID.
+Assim, enviar uma leitura antiga depois não muda qual é a mais recente.
+A resposta inclui o horário em UTC. Ela representa a última leitura registrada,
+não garante uma ocupação atual: o prazo de validade para visores e alertas será
+definido na etapa seguinte. Dados antigos continuam disponíveis no histórico.
+
+Uma plataforma com medições não pode ser excluída (resposta `409`), nem sua
+estação. Exclua as medições antes desses cadastros. A coleção Postman inclui o
+cenário de 300 pessoas, a correção para 280, a consulta da última ocupação,
+validação de quantidade negativa e limpeza na ordem dos relacionamentos.
