@@ -2559,6 +2559,233 @@
       ]
     },
     {
+      "name": "Sinalização de lotação",
+      "item": [
+        {
+          "name": "Consultar sinalização da composição",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"tremId\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao1Id\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao2Id\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao3Id\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Vagões na ordem e faixas esperadas\", () => { const v = pm.response.json(); pm.expect(v.map(x => x.posicao)).to.eql([1, 2, 3]); pm.expect(v.map(x => x.situacao)).to.eql([\"Ocupado\", \"Ocupado\", \"Muito cheio\"]); pm.expect(v.map(x => x.cor)).to.eql([\"Amarelo\", \"Amarelo\", \"Vermelho\"]); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/Trem/{{tremId}}/lotacao"
+          }
+        },
+        {
+          "name": "Simular 40 pessoas no vagão 1",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"medicaoVagaoEm\", new Date(Date.now() - 1000).toISOString());",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao1Id\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"parada2Id\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/MedicaoVagao/{{medicaoVagao1Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"vagaoId\": {{vagao1Id}}, \"paradaProgramadaId\": {{parada2Id}}, \"ocupacaoInicial\": 30, \"embarques\": 15, \"desembarques\": 5, \"medidaEm\": \"{{medicaoVagaoEm}}\", \"origem\": \"Simulacao\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Conferir Com espaço",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao1Id\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Texto e cor\", () => { const v = pm.response.json(); pm.expect(v.situacao).to.eql(\"Com espaço\"); pm.expect(v.cor).to.eql(\"Verde\"); pm.expect(v.percentualOcupacao).to.eql(40); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/Vagao/{{vagao1Id}}/lotacao"
+          }
+        },
+        {
+          "name": "Simular leitura antiga",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"medicaoVagaoEm\", new Date(Date.now() - 6 * 60000).toISOString());",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao1Id\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"parada2Id\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/MedicaoVagao/{{medicaoVagao1Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"vagaoId\": {{vagao1Id}}, \"paradaProgramadaId\": {{parada2Id}}, \"ocupacaoInicial\": 30, \"embarques\": 15, \"desembarques\": 5, \"medidaEm\": \"{{medicaoVagaoEm}}\", \"origem\": \"Simulacao\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Conferir Lotação indisponível",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao1Id\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Leitura antiga não representa contagem atual\", () => { const v = pm.response.json(); pm.expect(v.situacao).to.eql(\"Lotação indisponível\"); pm.expect(v.cor).to.eql(\"Cinza\"); pm.expect(v.ocupacaoEstimada).to.eql(null); pm.expect(v.percentualOcupacao).to.eql(null); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/Vagao/{{vagao1Id}}/lotacao"
+          }
+        },
+        {
+          "name": "Restaurar leitura recente",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"medicaoVagaoEm\", new Date(Date.now() - 1000).toISOString());",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao1Id\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"parada2Id\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/MedicaoVagao/{{medicaoVagao1Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"vagaoId\": {{vagao1Id}}, \"paradaProgramadaId\": {{parada2Id}}, \"ocupacaoInicial\": 30, \"embarques\": 15, \"desembarques\": 5, \"medidaEm\": \"{{medicaoVagaoEm}}\", \"origem\": \"Simulacao\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Limpeza",
       "item": [
         {

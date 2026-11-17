@@ -176,8 +176,8 @@ ocupação também retorna `404` se a plataforma não existir ou não tiver medi
 Ela usa o maior `medidaEm` que não esteja no futuro e, em empate, o maior ID.
 Assim, enviar uma leitura antiga depois não muda qual é a mais recente.
 A resposta inclui o horário em UTC. Ela representa a última leitura registrada,
-não garante uma ocupação atual: o prazo de validade para visores e alertas será
-definido na etapa seguinte. Dados antigos continuam disponíveis no histórico.
+não garante uma ocupação atual: a sinalização de vagões usa a validade de cinco minutos descrita abaixo;
+a ocupação da plataforma continua disponível como leitura histórica. Dados antigos continuam disponíveis no histórico.
 
 Uma plataforma com medições não pode ser excluída (resposta `409`), nem sua
 estação. Exclua as medições antes desses cadastros. A coleção Postman inclui o
@@ -239,11 +239,71 @@ Operações por ID retornam `404` para medição inexistente. A última ocupaç�
 retorna `404` para vagão inexistente ou sem leitura, usa o maior `medidaEm` que
 não esteja no futuro e, em empate, o maior ID. Retorna o horário com `Z`.
 Assim como na plataforma, essa consulta expõe a última leitura registrada;
-o prazo para considerar uma leitura antiga indisponível será definido com os
-visores. Esta etapa ainda não classifica lotação nem gera alertas.
+a rota `/lotacao`, descrita abaixo, considera indisponíveis leituras com mais
+de cinco minutos e classifica a lotação. Alertas ainda não são gerados.
 
 Vagão ou parada com medições não pode ser excluído (`409`). A exclusão do trem
 também é protegida. Trocar o trem de um vagão com medições ligadas a paradas,
 ou de uma parada com medições, retorna `409`; remova esses vínculos primeiro.
 A coleção Postman registra leituras dos três vagões e remove as medições antes
 das paradas e vagões. Os dados da coleção são simulações.
+
+## Sinalização de lotação por vagão
+
+Os endpoints abaixo transformam a última medição em informação para os futuros
+visores externos. A resposta contém texto e cor; esta etapa entrega a regra
+pela API, ainda sem uma tela de visor.
+
+- `GET /api/Vagao/{id}/lotacao`: sinalização de um vagão.
+- `GET /api/Trem/{id}/lotacao`: sinalização de todos os vagões, em ordem de posição.
+
+Critérios escolhidos para a simulação acadêmica:
+
+| Ocupação em relação à capacidade | Situação | Cor |
+|---|---|---|
+| Menos de 50% | Com espaço | Verde |
+| De 50% a menos de 80% | Ocupado | Amarelo |
+| 80% ou mais | Muito cheio | Vermelho |
+| Sem leitura ou leitura com mais de 5 minutos | Lotação indisponível | Cinza |
+
+Esses limites não são normas de operação ferroviária. O percentual é calculado
+por `100 × ocupacaoEstimada / capacidadePessoas`, sem limitar o resultado a 100%.
+A classificação usa o valor calculado, sem arredondamento.
+
+A consulta considera o horário UTC atual. Leituras no futuro são ignoradas,
+a leitura mais recente é escolhida por horário (maior ID em empate), e a
+validade é de até cinco minutos. Capacidade não positiva ou ocupação negativa
+em dados legados também resulta em indisponibilidade.
+
+Exemplo de resposta para capacidade 100 e ocupação 40:
+
+```json
+{
+  "vagaoId": 1,
+  "posicao": 1,
+  "capacidadePessoas": 100,
+  "ocupacaoEstimada": 40,
+  "percentualOcupacao": 40,
+  "medidaEm": "2026-11-17T18:00:00Z",
+  "situacao": "Com espaço",
+  "cor": "Verde"
+}
+```
+
+Sem leitura válida, a resposta continua sendo `200`, com situação
+“Lotação indisponível”, cor “Cinza”, ocupação e percentual `null`. `medidaEm`
+guarda o horário da última leitura passada, mesmo quando antiga, ou `null`
+se não houver leitura. Assim, ausência de informação não é confundida com vagão
+vazio. Vagão ou trem inexistente retorna `404` JSON; trem sem vagões retorna
+`200` com `[]`.
+
+Os endpoints `/ultima-ocupacao` continuam retornando a última medição histórica,
+mesmo antiga. Para sinalização atual, use `/lotacao`. A classificação é feita na
+consulta, não altera medições e não exige nova migration.
+
+A pasta “Sinalização de lotação” no Postman consulta a composição, corrige uma
+leitura para demonstrar “Com espaço”, simula uma leitura antiga para demonstrar
+indisponibilidade e depois restaura o horário. Execute a coleção na ordem
+completa; se demorar mais de cinco minutos após os cadastros, atualize as
+medições para consultar as faixas atuais. Alertas operacionais ficam para a
+próxima etapa.
