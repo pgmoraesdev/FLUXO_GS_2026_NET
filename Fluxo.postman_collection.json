@@ -89,6 +89,11 @@
       "key": "medicaoVagaoEm",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "alertaId",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -2786,8 +2791,570 @@
       ]
     },
     {
+      "name": "Alerta operacional",
+      "item": [
+        {
+          "name": "Preparar ocupação do vagão 1",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"medicaoVagaoEm\", new Date(Date.now() - 1000).toISOString());",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao1Id\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"parada2Id\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/MedicaoVagao/{{medicaoVagao1Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"vagaoId\": {{vagao1Id}}, \"paradaProgramadaId\": {{parada2Id}}, \"ocupacaoInicial\": 30, \"embarques\": 0, \"desembarques\": 0, \"medidaEm\": \"{{medicaoVagaoEm}}\", \"origem\": \"Simulacao\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Preparar ocupação do vagão 2",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"medicaoVagaoEm\", new Date(Date.now() - 1000).toISOString());",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao2Id\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"parada2Id\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/MedicaoVagao/{{medicaoVagao2Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"vagaoId\": {{vagao2Id}}, \"paradaProgramadaId\": {{parada2Id}}, \"ocupacaoInicial\": 70, \"embarques\": 0, \"desembarques\": 0, \"medidaEm\": \"{{medicaoVagaoEm}}\", \"origem\": \"Simulacao\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Preparar ocupação do vagão 3",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"medicaoVagaoEm\", new Date(Date.now() - 1000).toISOString());",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao3Id\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"parada2Id\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/MedicaoVagao/{{medicaoVagao3Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"vagaoId\": {{vagao3Id}}, \"paradaProgramadaId\": {{parada2Id}}, \"ocupacaoInicial\": 90, \"embarques\": 0, \"desembarques\": 0, \"medidaEm\": \"{{medicaoVagaoEm}}\", \"origem\": \"Simulacao\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Preparar demanda de 300 pessoas",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"medicaoPlataformaEm\", new Date(Date.now() - 1000).toISOString());",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoPlataformaId\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"plataformaId\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/MedicaoPlataforma/{{medicaoPlataformaId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"plataformaId\": {{plataformaId}}, \"quantidadePessoas\": 300, \"medidaEm\": \"{{medicaoPlataformaEm}}\", \"origem\": \"Simulacao\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Avaliar e abrir alerta 300/180",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.unset(\"alertaId\");",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"parada2Id\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoPlataformaId\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao1Id\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao2Id\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao3Id\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) pm.collectionVariables.set(\"alertaId\", String(pm.response.json().alertaId));",
+                  "pm.test(\"Simulação: 120 pessoas podem ficar\", () => { const a = pm.response.json(); pm.expect(a.demandaProjetada).to.eql(300); pm.expect(a.capacidadeDisponivelEstimada).to.eql(180); pm.expect(a.pessoasPodemFicar).to.eql(120); pm.expect(a.statusAlerta).to.eql(\"Aberto\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ParadaProgramada/{{parada2Id}}/avaliar-demanda",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"desembarquesPrevistos\": [{\"vagaoId\": {{vagao1Id}}, \"quantidadePessoas\": 0}, {\"vagaoId\": {{vagao2Id}}, \"quantidadePessoas\": 30}, {\"vagaoId\": {{vagao3Id}}, \"quantidadePessoas\": 40}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Reavaliar sem duplicar",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"alertaId\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"parada2Id\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Mesmo alerta\", () => pm.expect(pm.response.json().alertaId).to.eql(Number(pm.collectionVariables.get(\"alertaId\"))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ParadaProgramada/{{parada2Id}}/avaliar-demanda",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"desembarquesPrevistos\": [{\"vagaoId\": {{vagao1Id}}, \"quantidadePessoas\": 0}, {\"vagaoId\": {{vagao2Id}}, \"quantidadePessoas\": 30}, {\"vagaoId\": {{vagao3Id}}, \"quantidadePessoas\": 40}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Listar alertas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/AlertaOperacional"
+          }
+        },
+        {
+          "name": "Consultar números da abertura",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"alertaId\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Registro inicial preservado\", () => { const a = pm.response.json(); pm.expect(a.demandaProjetada).to.eql(300); pm.expect(a.capacidadeDisponivelEstimada).to.eql(180); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/AlertaOperacional/{{alertaId}}"
+          }
+        },
+        {
+          "name": "Rejeitar status inválido",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"alertaId\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/AlertaOperacional/{{alertaId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\":\"Resolvido\", \"acaoOperador\":null}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Rejeitar encerramento sem ação",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"alertaId\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/AlertaOperacional/{{alertaId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\":\"Encerrado\", \"acaoOperador\":\"\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Operador analisa alerta",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"alertaId\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/AlertaOperacional/{{alertaId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\":\"EmAnalise\", \"acaoOperador\":\"Solicitada avaliação de trem reserva\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Operador encerra alerta",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"alertaId\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/AlertaOperacional/{{alertaId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\":\"Encerrado\", \"acaoOperador\":\"Solicitada avaliação de trem reserva\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Reavaliar sem reabrir",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"alertaId\") || \"\"))) { pm.execution.skipRequest(); }",
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"parada2Id\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Decisão do operador preservada\", () => { const a = pm.response.json(); pm.expect(a.alertaId).to.eql(Number(pm.collectionVariables.get(\"alertaId\"))); pm.expect(a.statusAlerta).to.eql(\"Encerrado\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ParadaProgramada/{{parada2Id}}/avaliar-demanda",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"desembarquesPrevistos\": [{\"vagaoId\": {{vagao1Id}}, \"quantidadePessoas\": 0}, {\"vagaoId\": {{vagao2Id}}, \"quantidadePessoas\": 30}, {\"vagaoId\": {{vagao3Id}}, \"quantidadePessoas\": 40}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Limpeza",
       "item": [
+        {
+          "name": "Excluir alerta de teste",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"alertaId\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/AlertaOperacional/{{alertaId}}"
+          }
+        },
         {
           "name": "Excluir medição do vagão 1",
           "event": [

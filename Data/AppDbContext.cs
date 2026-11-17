@@ -20,6 +20,8 @@ namespace Fluxo_GS_2026_2TDSPR.Data
 
         public DbSet<MedicaoVagao> MedicoesVagao { get; set; }
 
+        public DbSet<AlertaOperacional> AlertasOperacionais { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Estacao>().ToTable("TBL_ESTACOES_2TDSPR");
@@ -74,6 +76,16 @@ namespace Fluxo_GS_2026_2TDSPR.Data
                 medicao.HasOne<Vagao>().WithMany().HasForeignKey(m => m.VagaoId)
                     .OnDelete(DeleteBehavior.Restrict);
                 medicao.HasOne<ParadaProgramada>().WithMany().HasForeignKey(m => m.ParadaProgramadaId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<AlertaOperacional>(alerta =>
+            {
+                alerta.ToTable("TBL_ALERTAS_2TDSPR");
+                alerta.Property(a => a.Status).HasMaxLength(20).IsRequired();
+                alerta.Property(a => a.AcaoOperador).HasMaxLength(1000);
+                alerta.HasIndex(a => a.ParadaProgramadaId).IsUnique();
+                alerta.HasOne<ParadaProgramada>().WithMany().HasForeignKey(a => a.ParadaProgramadaId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 

@@ -132,6 +132,12 @@ public class ParadaProgramadaController : ControllerBase
             return Problem(statusCode: 409, detail: "A parada tem medições de vagões. Remova esses vínculos antes de trocar o trem.");
         }
 
+        if ((parada.TremId != input.TremId || parada.PlataformaId != input.PlataformaId)
+            && await dbContext.AlertasOperacionais.AnyAsync(a => a.ParadaProgramadaId == id, cancellationToken))
+        {
+            return Problem(statusCode: 409, detail: "A parada tem um alerta. Remova o alerta antes de trocar o trem ou a plataforma.");
+        }
+
         parada.TremId = input.TremId;
         parada.PlataformaId = input.PlataformaId;
         parada.ChegadaPrevistaEm = input.ChegadaPrevistaEm;
@@ -166,7 +172,7 @@ public class ParadaProgramadaController : ControllerBase
         }
         catch (DbUpdateException ex) when (ex.InnerException is OracleException { Number: 2292 })
         {
-            return Problem(statusCode: 409, detail: "Existem medições vinculadas. Remova as medições antes de excluir este recurso.");
+            return Problem(statusCode: 409, detail: "Existem medições ou alertas vinculados. Remova esses registros antes de excluir este recurso.");
         }
         catch (DbUpdateConcurrencyException)
         {

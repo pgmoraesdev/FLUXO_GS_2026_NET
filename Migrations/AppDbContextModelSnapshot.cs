@@ -22,6 +22,46 @@ namespace Fluxo_GS_2026_2TDSPR.Migrations
 
             OracleModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Fluxo_GS_2026_2TDSPR.Models.AlertaOperacional", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AcaoOperador")
+                        .HasMaxLength(1000)
+                        .HasColumnType("NVARCHAR2(1000)");
+
+                    b.Property<DateTime?>("AtualizadoEm")
+                        .HasColumnType("TIMESTAMP(7)");
+
+                    b.Property<long>("CapacidadeDisponivelEstimada")
+                        .HasColumnType("NUMBER(19)");
+
+                    b.Property<int>("DemandaProjetada")
+                        .HasColumnType("NUMBER(10)");
+
+                    b.Property<DateTime>("GeradoEm")
+                        .HasColumnType("TIMESTAMP(7)");
+
+                    b.Property<int>("ParadaProgramadaId")
+                        .HasColumnType("NUMBER(10)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParadaProgramadaId")
+                        .IsUnique();
+
+                    b.ToTable("TBL_ALERTAS_2TDSPR", (string)null);
+                });
+
             modelBuilder.Entity("Fluxo_GS_2026_2TDSPR.Models.Estacao", b =>
                 {
                     b.Property<int>("Id")
@@ -211,6 +251,15 @@ namespace Fluxo_GS_2026_2TDSPR.Migrations
                         .IsUnique();
 
                     b.ToTable("TBL_VAGOES_2TDSPR", (string)null);
+                });
+
+            modelBuilder.Entity("Fluxo_GS_2026_2TDSPR.Models.AlertaOperacional", b =>
+                {
+                    b.HasOne("Fluxo_GS_2026_2TDSPR.Models.ParadaProgramada", null)
+                        .WithMany()
+                        .HasForeignKey("ParadaProgramadaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Fluxo_GS_2026_2TDSPR.Models.MedicaoPlataforma", b =>

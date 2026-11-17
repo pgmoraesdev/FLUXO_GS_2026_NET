@@ -240,7 +240,7 @@ retorna `404` para vagão inexistente ou sem leitura, usa o maior `medidaEm` que
 não esteja no futuro e, em empate, o maior ID. Retorna o horário com `Z`.
 Assim como na plataforma, essa consulta expõe a última leitura registrada;
 a rota `/lotacao`, descrita abaixo, considera indisponíveis leituras com mais
-de cinco minutos e classifica a lotação. Alertas ainda não são gerados.
+de cinco minutos e classifica a lotação. A avaliação de demanda e os alertas são descritos adiante.
 
 Vagão ou parada com medições não pode ser excluído (`409`). A exclusão do trem
 também é protegida. Trocar o trem de um vagão com medições ligadas a paradas,
@@ -305,5 +305,106 @@ A pasta “Sinalização de lotação” no Postman consulta a composição, cor
 leitura para demonstrar “Com espaço”, simula uma leitura antiga para demonstrar
 indisponibilidade e depois restaura o horário. Execute a coleção na ordem
 completa; se demorar mais de cinco minutos após os cadastros, atualize as
-medições para consultar as faixas atuais. Alertas operacionais ficam para a
-próxima etapa.
+medições para consultar as faixas atuais. A avaliação de demanda e os alertas são descritos adiante.
+
+## Avaliação da demanda e alerta operacional
+
+Aplique a migration `AddAlertasOperacionais` no seu schema de teste.
+A criação do alerta acontece pela avaliação da parada, para que a API calcule
+os números usados na decisão. Não é necessário cadastrar um alerta manualmente.
+
+`POST /api/ParadaProgramada/{id}/avaliar-demanda` recebe os desembarques
+**previstos**, informados manualmente para cada vagão no cenário simulado:
+
+```json
+{
+  "desembarquesPrevistos": [
+    { "vagaoId": 1, "quantidadePessoas": 0 },
+    { "vagaoId": 2, "quantidadePessoas": 30 },
+    { "vagaoId": 3, "quantidadePessoas": 40 }
+  ]
+}
+```
+
+Use os IDs reais dos vagões do trem da parada. Informe cada vagão exatamente uma
+vez, inclusive quando a previsão for zero. A previsão não pode ser negativa nem
+maior que a ocupação atual do vagão. Ela é diferente dos desembarques já
+registrados na medição: movimentos passados não são subtraídos novamente.
+
+No MVP, a última ocupação da plataforma é usada diretamente como demanda
+projetada para a chegada. Não há previsão de novas pessoas entrando ou saindo
+até a chegada. As medições da plataforma e de todos os vagões devem ter até
+cinco minutos, com horário passado ou atual. Sem dados completos, a avaliação
+retorna `400` JSON e não cria nem modifica alertas. Parada inexistente retorna
+`404`; parada com chegada real registrada retorna `400`.
+
+Para cada vagão:
+
+`ocupação após desembarque = ocupação estimada − desembarques previstos`
+
+`espaço disponível = máximo(0, capacidade − ocupação após desembarque)`
+
+A API soma os espaços e calcula:
+
+`pessoas que podem ficar = máximo(0, demanda projetada − capacidade disponível)`
+
+**Cenário de demonstração, identificado como simulação:**
+
+| Vagão | Capacidade | Ocupação atual | Desembarques previstos | Espaço disponível |
+|---|---:|---:|---:|---:|
+| 1 | 100 | 30 | 0 | 70 |
+| 2 | 100 | 70 | 30 | 60 |
+| 3 | 100 | 90 | 40 | 50 |
+| Total | 300 | 190 | 70 | 180 |
+
+Com 300 pessoas na plataforma e 180 lugares estimados após desembarques,
+cerca de 120 pessoas podem ficar para a próxima viagem. Ao mesmo tempo, a
+sinalização atual indica “Com espaço” no vagão 1, “Ocupado” no 2 e “Muito cheio”
+no 3. Essa comparação é uma simulação; não representa resultado de operação real.
+
+A avaliação retorna `201` e `Location` quando abre um alerta. Retorna `200` se
+não houver risco ou se já existir alerta para a parada. O corpo contém
+`paradaProgramadaId`, `avaliadoEm`, `demandaProjetada`,
+`capacidadeDisponivelEstimada`, `pessoasPodemFicar`, `alertaId` e `statusAlerta`.
+Se não houver risco nem alerta anterior, os dois últimos campos serão `null`.
+
+O índice único em `ParadaProgramadaId` garante zero ou um alerta por parada.
+O alerta guarda a demanda e a capacidade no momento da abertura. Novas avaliações
+retornam estimativas atuais, preservando os números iniciais e o status escolhido
+pelo operador. Redução da demanda não encerra o alerta automaticamente, e uma
+nova avaliação não reabre um alerta encerrado.
+
+### Acompanhamento pelo operador
+
+- `GET /api/AlertaOperacional`: lista os alertas, ou `[]` se vazio.
+- `GET /api/AlertaOperacional/{id}`: consulta os números da abertura, status e ação.
+- `PUT /api/AlertaOperacional/{id}`: altera status e ação; sucesso `204`.
+- `DELETE /api/AlertaOperacional/{id}`: exclui o alerta; sucesso `204`.
+
+Exemplo de alteração:
+
+```json
+{
+  "status": "EmAnalise",
+  "acaoOperador": "Solicitada avaliação de trem reserva"
+}
+```
+
+Os status aceitos são `Aberto`, `EmAnalise` e `Encerrado`. Para encerrar, registre
+uma ação não vazia, de até 1000 caracteres. O `PUT` substitui status e ação; para
+apenas mudar status mantendo uma ação, envie também o texto atual. Essa rota não
+permite alterar os números da abertura. Entradas inválidas retornam `400` JSON,
+e alerta inexistente retorna `404`. O operador pode reabrir explicitamente um
+alerta com `PUT`; a avaliação automática não altera seu status.
+
+A exclusão serve também para a limpeza do cenário de teste. Depois de excluir,
+outra avaliação com risco pode criar um novo alerta, mantendo no máximo um
+registro atual por parada. Uma parada com alerta não pode ser excluída nem ter
+trem ou plataforma trocados (`409`); remova o alerta antes dessas operações.
+
+A pasta “Alerta operacional” no Postman prepara o cenário 300/180, verifica as
+120 pessoas estimadas, repete a avaliação para conferir que não há duplicata,
+registra a ação e encerra o alerta. A limpeza exclui o alerta antes da parada.
+O sistema apenas apoia a avaliação pelo Centro de Controle Operacional: a
+solicitação de reforço é uma decisão humana. Não há comando automático de trem
+reserva, autenticação do operador ou painel visual nesta etapa.
