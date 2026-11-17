@@ -8,4 +8,6 @@ public class Trem
 
     [Required]
     public string Codigo { get; set; } = string.Empty;
+
+    public ICollection<Vagao> Vagoes { get; set; } = new List<Vagao>();
 }

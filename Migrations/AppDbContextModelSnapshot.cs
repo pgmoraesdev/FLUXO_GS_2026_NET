@@ -16,7 +16,7 @@ namespace Fluxo_GS_2026_2TDSPR.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0")
+                .HasAnnotation("ProductVersion", "8.0.33")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             OracleModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -65,6 +65,52 @@ namespace Fluxo_GS_2026_2TDSPR.Migrations
                     b.ToTable("Plataforma");
                 });
 
+            modelBuilder.Entity("Fluxo_GS_2026_2TDSPR.Models.Trem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Codigo")
+                        .IsUnique();
+
+                    b.ToTable("TBL_TRENS_2TDSPR", (string)null);
+                });
+
+            modelBuilder.Entity("Fluxo_GS_2026_2TDSPR.Models.Vagao", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CapacidadePessoas")
+                        .HasColumnType("NUMBER(10)");
+
+                    b.Property<int>("Posicao")
+                        .HasColumnType("NUMBER(10)");
+
+                    b.Property<int>("TremId")
+                        .HasColumnType("NUMBER(10)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TremId", "Posicao")
+                        .IsUnique();
+
+                    b.ToTable("TBL_VAGOES_2TDSPR", (string)null);
+                });
+
             modelBuilder.Entity("Fluxo_GS_2026_2TDSPR.Models.Plataforma", b =>
                 {
                     b.HasOne("Fluxo_GS_2026_2TDSPR.Models.Estacao", "Estacao")
@@ -76,9 +122,25 @@ namespace Fluxo_GS_2026_2TDSPR.Migrations
                     b.Navigation("Estacao");
                 });
 
+            modelBuilder.Entity("Fluxo_GS_2026_2TDSPR.Models.Vagao", b =>
+                {
+                    b.HasOne("Fluxo_GS_2026_2TDSPR.Models.Trem", "Trem")
+                        .WithMany("Vagoes")
+                        .HasForeignKey("TremId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Trem");
+                });
+
             modelBuilder.Entity("Fluxo_GS_2026_2TDSPR.Models.Estacao", b =>
                 {
                     b.Navigation("Plataformas");
+                });
+
+            modelBuilder.Entity("Fluxo_GS_2026_2TDSPR.Models.Trem", b =>
+                {
+                    b.Navigation("Vagoes");
                 });
 #pragma warning restore 612, 618
         }

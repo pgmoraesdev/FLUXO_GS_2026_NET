@@ -1,4 +1,4 @@
-﻿using Fluxo_GS_2026_2TDSPR.Models;
+using Fluxo_GS_2026_2TDSPR.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fluxo_GS_2026_2TDSPR.Data
@@ -11,6 +11,8 @@ namespace Fluxo_GS_2026_2TDSPR.Data
         }
 
         public DbSet<Estacao> Estacoes { get; set; }
+        public DbSet<Trem> Trens { get; set; }
+        public DbSet<Vagao> Vagoes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -22,6 +24,22 @@ namespace Fluxo_GS_2026_2TDSPR.Data
                 .Property(e => e.Nome)
                 .HasColumnName("NM_ESTACAO")
                 .IsRequired();
+
+            modelBuilder.Entity<Trem>(trem =>
+            {
+                trem.ToTable("TBL_TRENS_2TDSPR");
+                trem.Property(t => t.Codigo).HasMaxLength(50).IsRequired();
+                trem.HasIndex(t => t.Codigo).IsUnique();
+            });
+
+            modelBuilder.Entity<Vagao>(vagao =>
+            {
+                vagao.ToTable("TBL_VAGOES_2TDSPR");
+                vagao.HasIndex(v => new { v.TremId, v.Posicao }).IsUnique();
+                vagao.HasOne(v => v.Trem)
+                    .WithMany(t => t.Vagoes)
+                    .HasForeignKey(v => v.TremId);
+            });
 
             base.OnModelCreating(modelBuilder);
         }
