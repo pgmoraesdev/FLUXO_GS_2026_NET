@@ -111,6 +111,12 @@ public class VagaoController : ControllerBase
             return Problem(statusCode: StatusCodes.Status404NotFound, detail: "Trem não encontrado.");
         }
 
+        if (vagao.TremId != input.TremId && await dbContext.MedicoesVagao
+            .AnyAsync(m => m.VagaoId == id && m.ParadaProgramadaId != null, cancellationToken))
+        {
+            return Problem(statusCode: 409, detail: "O vagão tem medições ligadas a paradas. Remova esses vínculos antes de trocar o trem.");
+        }
+
         vagao.TremId = input.TremId;
         vagao.Posicao = input.Posicao;
         vagao.CapacidadePessoas = input.CapacidadePessoas;
@@ -138,6 +144,7 @@ public class VagaoController : ControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         var vagao = await dbContext.Vagoes.FindAsync(new object[] { id }, cancellationToken);
@@ -151,6 +158,10 @@ public class VagaoController : ControllerBase
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is OracleException { Number: 2292 })
+        {
+            return Problem(statusCode: 409, detail: "Existem medições vinculadas. Remova as medições antes de excluir este recurso.");
         }
         catch (DbUpdateConcurrencyException)
         {

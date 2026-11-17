@@ -119,12 +119,19 @@ public class ParadaProgramadaController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Update(int id, ParadaInput input, CancellationToken cancellationToken)
     {
         var parada = await dbContext.ParadasProgramadas.FindAsync(new object[] { id }, cancellationToken);
         if (parada is null) return Problem(statusCode: 404, detail: "Parada programada não encontrada.");
         var erro = await ValidarVinculos(input, cancellationToken);
         if (erro is not null) return erro;
+        if (parada.TremId != input.TremId && await dbContext.MedicoesVagao
+            .AnyAsync(m => m.ParadaProgramadaId == id, cancellationToken))
+        {
+            return Problem(statusCode: 409, detail: "A parada tem medições de vagões. Remova esses vínculos antes de trocar o trem.");
+        }
+
         parada.TremId = input.TremId;
         parada.PlataformaId = input.PlataformaId;
         parada.ChegadaPrevistaEm = input.ChegadaPrevistaEm;
@@ -147,6 +154,7 @@ public class ParadaProgramadaController : ControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         var parada = await dbContext.ParadasProgramadas.FindAsync(new object[] { id }, cancellationToken);
@@ -155,6 +163,10 @@ public class ParadaProgramadaController : ControllerBase
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is OracleException { Number: 2292 })
+        {
+            return Problem(statusCode: 409, detail: "Existem medições vinculadas. Remova as medições antes de excluir este recurso.");
         }
         catch (DbUpdateConcurrencyException)
         {

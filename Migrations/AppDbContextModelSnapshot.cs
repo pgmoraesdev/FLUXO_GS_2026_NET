@@ -69,6 +69,49 @@ namespace Fluxo_GS_2026_2TDSPR.Migrations
                     b.ToTable("TBL_MED_PLATAFORMA_2TDSPR", (string)null);
                 });
 
+            modelBuilder.Entity("Fluxo_GS_2026_2TDSPR.Models.MedicaoVagao", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Desembarques")
+                        .HasColumnType("NUMBER(10)");
+
+                    b.Property<int>("Embarques")
+                        .HasColumnType("NUMBER(10)");
+
+                    b.Property<DateTime>("MedidaEm")
+                        .HasColumnType("TIMESTAMP(7)");
+
+                    b.Property<int>("OcupacaoEstimada")
+                        .HasColumnType("NUMBER(10)");
+
+                    b.Property<int>("OcupacaoInicial")
+                        .HasColumnType("NUMBER(10)");
+
+                    b.Property<string>("Origem")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)");
+
+                    b.Property<int?>("ParadaProgramadaId")
+                        .HasColumnType("NUMBER(10)");
+
+                    b.Property<int>("VagaoId")
+                        .HasColumnType("NUMBER(10)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParadaProgramadaId");
+
+                    b.HasIndex("VagaoId", "MedidaEm");
+
+                    b.ToTable("TBL_MED_VAGAO_2TDSPR", (string)null);
+                });
+
             modelBuilder.Entity("Fluxo_GS_2026_2TDSPR.Models.ParadaProgramada", b =>
                 {
                     b.Property<int>("Id")
@@ -175,6 +218,20 @@ namespace Fluxo_GS_2026_2TDSPR.Migrations
                     b.HasOne("Fluxo_GS_2026_2TDSPR.Models.Plataforma", null)
                         .WithMany()
                         .HasForeignKey("PlataformaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Fluxo_GS_2026_2TDSPR.Models.MedicaoVagao", b =>
+                {
+                    b.HasOne("Fluxo_GS_2026_2TDSPR.Models.ParadaProgramada", null)
+                        .WithMany()
+                        .HasForeignKey("ParadaProgramadaId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Fluxo_GS_2026_2TDSPR.Models.Vagao", null)
+                        .WithMany()
+                        .HasForeignKey("VagaoId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

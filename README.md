@@ -183,3 +183,67 @@ Uma plataforma com medições não pode ser excluída (resposta `409`), nem sua
 estação. Exclua as medições antes desses cadastros. A coleção Postman inclui o
 cenário de 300 pessoas, a correção para 280, a consulta da última ocupação,
 validação de quantidade negativa e limpeza na ordem dos relacionamentos.
+
+## Ocupação simulada dos vagões
+
+`MedicaoVagao` registra a contagem de um vagão em um horário. A API calcula:
+
+`ocupacaoEstimada = ocupacaoInicial + embarques - desembarques`
+
+Cada leitura é independente: `ocupacaoInicial` é a base antes dos movimentos
+informados naquela requisição. Para continuar uma contagem, envie a ocupação
+estimada anterior como base da próxima leitura. A API não soma automaticamente
+as leituras do histórico e não recalcula outras leituras ao corrigir uma delas.
+
+Aplique a migration `AddMedicoesVagao` no seu schema de teste antes de usar as
+rotas. Exemplo de `POST /api/MedicaoVagao` (ajuste o ID e o horário):
+
+```json
+{
+  "vagaoId": 1,
+  "paradaProgramadaId": null,
+  "ocupacaoInicial": 40,
+  "embarques": 15,
+  "desembarques": 5,
+  "medidaEm": "2026-11-17T18:00:00Z",
+  "origem": "Simulacao"
+}
+```
+
+O resultado desse exemplo é `ocupacaoEstimada: 50`. Esse campo é calculado pela
+API, e não recebido como entrada. A resposta inclui também os dados da leitura
+e seu ID. `POST` retorna `201` com `Location`.
+
+O vínculo com a parada é opcional. Se informado, a parada deve existir e seu
+trem deve ser o mesmo do vagão. Vínculo com trem diferente retorna `400` JSON;
+vagão ou parada inexistente retorna `404` JSON. Sem parada, use `null` ou omita
+`paradaProgramadaId`.
+
+As três contagens são obrigatórias, aceitam zero e não podem ser negativas.
+O resultado deve ficar entre zero e 2147483647. A contagem não é limitada à
+capacidade cadastrada: trata-se de uma estimativa, e excesso de ocupação deve
+continuar visível para a futura sinalização. Horário UTC com `Z` é obrigatório,
+não pode estar no futuro, e origem deve conter de 1 a 50 caracteres não vazios
+(a API remove espaços nas pontas). Dados inválidos retornam `400` JSON.
+
+| Método | Rota | Resultado no sucesso |
+|---|---|---|
+| GET | `/api/MedicaoVagao` | `200`, histórico do mais recente ao mais antigo |
+| GET | `/api/MedicaoVagao/{id}` | `200`, leitura por ID |
+| POST | `/api/MedicaoVagao` | `201`, registra e calcula a ocupação |
+| PUT | `/api/MedicaoVagao/{id}` | `204`, corrige os dados e recalcula a ocupação |
+| DELETE | `/api/MedicaoVagao/{id}` | `204`, exclui a leitura |
+| GET | `/api/Vagao/{id}/ultima-ocupacao` | `200`, última leitura daquele vagão |
+
+Operações por ID retornam `404` para medição inexistente. A última ocupação
+retorna `404` para vagão inexistente ou sem leitura, usa o maior `medidaEm` que
+não esteja no futuro e, em empate, o maior ID. Retorna o horário com `Z`.
+Assim como na plataforma, essa consulta expõe a última leitura registrada;
+o prazo para considerar uma leitura antiga indisponível será definido com os
+visores. Esta etapa ainda não classifica lotação nem gera alertas.
+
+Vagão ou parada com medições não pode ser excluído (`409`). A exclusão do trem
+também é protegida. Trocar o trem de um vagão com medições ligadas a paradas,
+ou de uma parada com medições, retorna `409`; remova esses vínculos primeiro.
+A coleção Postman registra leituras dos três vagões e remove as medições antes
+das paradas e vagões. Os dados da coleção são simulações.
