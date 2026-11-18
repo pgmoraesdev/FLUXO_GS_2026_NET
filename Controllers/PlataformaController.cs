@@ -1,4 +1,3 @@
-using Oracle.ManagedDataAccess.Client;
 using System.ComponentModel.DataAnnotations;
 using Fluxo_GS_2026_2TDSPR.Data;
 using Fluxo_GS_2026_2TDSPR.Models;
@@ -156,7 +155,6 @@ public class PlataformaController : ControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         var plataforma = await dbContext.Set<Plataforma>().FindAsync(new object[] { id }, cancellationToken);
@@ -166,14 +164,7 @@ public class PlataformaController : ControllerBase
         }
 
         dbContext.Set<Plataforma>().Remove(plataforma);
-        try
-        {
-            await dbContext.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException ex) when (ex.InnerException is OracleException { Number: 2292 })
-        {
-            return Problem(statusCode: 409, detail: "Existem paradas ou medições vinculadas. Remova esses registros antes de excluir este recurso.");
-        }
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return NoContent();
     }

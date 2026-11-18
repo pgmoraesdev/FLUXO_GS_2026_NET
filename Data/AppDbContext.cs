@@ -15,14 +15,6 @@ namespace Fluxo_GS_2026_2TDSPR.Data
         public DbSet<Trem> Trens { get; set; }
         public DbSet<Vagao> Vagoes { get; set; }
 
-        public DbSet<ParadaProgramada> ParadasProgramadas { get; set; }
-
-        public DbSet<MedicaoPlataforma> MedicoesPlataforma { get; set; }
-
-        public DbSet<MedicaoVagao> MedicoesVagao { get; set; }
-
-        public DbSet<AlertaOperacional> AlertasOperacionais { get; set; }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             var horarioUtc = new ValueConverter<DateTime, DateTime>(
@@ -57,46 +49,6 @@ namespace Fluxo_GS_2026_2TDSPR.Data
                 vagao.HasOne(v => v.Trem)
                     .WithMany(t => t.Vagoes)
                     .HasForeignKey(v => v.TremId);
-            });
-
-            modelBuilder.Entity<ParadaProgramada>(parada =>
-            {
-                parada.ToTable("TBL_PARADAS_2TDSPR");
-                parada.HasIndex(p => new { p.PlataformaId, p.ChegadaPrevistaEm });
-                parada.HasOne(p => p.Trem).WithMany().HasForeignKey(p => p.TremId)
-                    .OnDelete(DeleteBehavior.Restrict);
-                parada.HasOne(p => p.Plataforma).WithMany().HasForeignKey(p => p.PlataformaId)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-
-            modelBuilder.Entity<MedicaoPlataforma>(medicao =>
-            {
-                medicao.ToTable("TBL_MED_PLATAFORMA_2TDSPR");
-                medicao.Property(m => m.Origem).HasMaxLength(50).IsRequired();
-                medicao.HasIndex(m => new { m.PlataformaId, m.MedidaEm });
-                medicao.HasOne<Plataforma>().WithMany().HasForeignKey(m => m.PlataformaId)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-
-            modelBuilder.Entity<MedicaoVagao>(medicao =>
-            {
-                medicao.ToTable("TBL_MED_VAGAO_2TDSPR");
-                medicao.Property(m => m.Origem).HasMaxLength(50).IsRequired();
-                medicao.HasIndex(m => new { m.VagaoId, m.MedidaEm });
-                medicao.HasOne<Vagao>().WithMany().HasForeignKey(m => m.VagaoId)
-                    .OnDelete(DeleteBehavior.Restrict);
-                medicao.HasOne<ParadaProgramada>().WithMany().HasForeignKey(m => m.ParadaProgramadaId)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-
-            modelBuilder.Entity<AlertaOperacional>(alerta =>
-            {
-                alerta.ToTable("TBL_ALERTAS_2TDSPR");
-                alerta.Property(a => a.Status).HasMaxLength(20).IsRequired();
-                alerta.Property(a => a.AcaoOperador).HasMaxLength(1000);
-                alerta.HasIndex(a => a.ParadaProgramadaId).IsUnique();
-                alerta.HasOne<ParadaProgramada>().WithMany().HasForeignKey(a => a.ParadaProgramadaId)
-                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             base.OnModelCreating(modelBuilder);

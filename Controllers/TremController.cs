@@ -122,7 +122,6 @@ public class TremController : ControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         var trem = await dbContext.Trens.FindAsync(new object[] { id }, cancellationToken);
@@ -136,10 +135,6 @@ public class TremController : ControllerBase
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException ex) when (ex.InnerException is OracleException { Number: 2292 })
-        {
-            return Problem(statusCode: 409, detail: "Existem paradas ou medições vinculadas. Remova esses registros antes de excluir este recurso.");
         }
         catch (DbUpdateConcurrencyException)
         {
