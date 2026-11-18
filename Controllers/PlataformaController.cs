@@ -24,6 +24,53 @@ public class PlataformaController : ControllerBase
         [Range(1, int.MaxValue)] int EstacaoId,
         [Range(0, int.MaxValue)] int? QuantidadePessoas = null);
 
+    public record AvaliacaoCapacidadeResponse(int PlataformaId, int TremId, DateTime AvaliadoEm,
+        int QuantidadePessoas, long CapacidadeDisponivel, long PessoasSemEspaco,
+        bool AvaliarReforco, string Mensagem);
+
+    [HttpGet("{id}/avaliar-capacidade")]
+    public async Task<ActionResult<AvaliacaoCapacidadeResponse>> AvaliarCapacidade(int id,
+        [FromQuery] int tremId, CancellationToken cancellationToken)
+    {
+        if (tremId <= 0)
+            return Problem(statusCode: 400, detail: "Informe um tremId maior que zero.");
+
+        var plataforma = await dbContext.Set<Plataforma>().AsNoTracking()
+            .SingleOrDefaultAsync(p => p.Id == id, cancellationToken);
+        if (plataforma is null)
+            return Problem(statusCode: 404, detail: "Plataforma não encontrada.");
+        if (!await dbContext.Trens.AnyAsync(t => t.Id == tremId, cancellationToken))
+            return Problem(statusCode: 404, detail: "Trem não encontrado.");
+
+        var agora = DateTime.UtcNow;
+        if (plataforma.QuantidadePessoas is null or < 0 || plataforma.AtualizadoEm is null
+            || plataforma.AtualizadoEm > agora || plataforma.AtualizadoEm < agora.AddMinutes(-5))
+        {
+            return Problem(statusCode: 400, detail: "Atualize a ocupação da plataforma. A leitura deve ter até cinco minutos.");
+        }
+
+        var vagoes = await dbContext.Vagoes.AsNoTracking()
+            .Where(v => v.TremId == tremId).ToListAsync(cancellationToken);
+        if (vagoes.Count == 0)
+            return Problem(statusCode: 400, detail: "Cadastre os vagões do trem antes de avaliar a capacidade.");
+
+        var lotacoes = vagoes.Select(v => LotacaoResponse.Criar(v, agora)).ToList();
+        if (lotacoes.Any(l => l.OcupacaoEstimada is null))
+            return Problem(statusCode: 400, detail: "Atualize a ocupação de todos os vagões. As leituras devem ter até cinco minutos.");
+
+        long capacidadeDisponivel = lotacoes.Sum(l => Math.Max(0L,
+            (long)l.CapacidadePessoas - l.OcupacaoEstimada!.Value));
+        long pessoasSemEspaco = Math.Max(0L, plataforma.QuantidadePessoas.Value - capacidadeDisponivel);
+        bool avaliarReforco = pessoasSemEspaco > 0;
+        string mensagem = avaliarReforco
+            ? "Capacidade insuficiente para as pessoas esperando. Avaliar reforço do serviço."
+            : "O trem possui espaço para as pessoas esperando na plataforma.";
+
+        return Ok(new AvaliacaoCapacidadeResponse(id, tremId, agora,
+            plataforma.QuantidadePessoas.Value, capacidadeDisponivel, pessoasSemEspaco,
+            avaliarReforco, mensagem));
+    }
+
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<List<Plataforma>>> GetAll(CancellationToken cancellationToken)

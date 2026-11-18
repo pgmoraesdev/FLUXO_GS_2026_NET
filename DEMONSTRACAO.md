@@ -18,6 +18,18 @@ A classificação já usa os campos diretos dos vagões. Consulte
 O roteiro histórico abaixo ainda usa medições e paradas para a previsão de
 desembarques e o alerta persistido.
 
+Para a avaliação simplificada, chame
+`GET /api/Plataforma/{id}/avaliar-capacidade?tremId={idDoTrem}` com as contagens
+acima. O resultado tem 300 pessoas, 110 lugares atuais e 190 pessoas sem espaço,
+com indicação para avaliar reforço. Essa consulta já está na pasta
+**Apresentação** da coleção de demonstração, após a sinalização dos vagões.
+
+Para mostrar 300 pessoas e 180 lugares disponíveis agora, atualize os três
+vagões para 30, 40 e 50 pessoas e repita a consulta. O resultado será de 120
+pessoas sem espaço. Com a plataforma atualizada para 100 pessoas, a avaliação
+indica demanda atendida. A pasta **Avaliação simplificada de capacidade** da
+coleção Postman principal prepara e verifica esses dois resultados.
+
 Todos os dados deste roteiro são **simulados**. A API não está conectada a
 câmeras, sensores ou à operação de uma linha real. O objetivo é demonstrar como
 contagens podem apoiar o passageiro e a avaliação do Centro de Controle
@@ -47,7 +59,7 @@ dotnet run --project Fluxo_GS_2026_2TDSPR.csproj --launch-profile http
 
 As leituras valem por cinco minutos. Se a demonstração demorar, execute a pasta
 **Atualizar medições** e repita as consultas. Essa pasta também atualiza a
-ocupação direta dos vagões pelo CRUD. Ela atualiza os registros existentes;
+ocupação direta dos vagões e da plataforma pelo CRUD. Ela atualiza os registros existentes;
 não cadastra outros e não reabre o alerta encerrado. Para apresentar
 novamente a criação de um alerta `201`, limpe a execução anterior e comece uma
 nova Preparação.

@@ -2827,6 +2827,334 @@
       ]
     },
     {
+      "name": "Avaliação simplificada de capacidade",
+      "item": [
+        {
+          "name": "Atualizar plataforma para 300 pessoas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Plataforma/{{plataformaId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Plataforma 1\",\"sentido\":\"Terminal Norte\",\"estacaoId\":{{estacaoId}},\"quantidadePessoas\":300}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Atualizar vagão 1 para o cenário 300/180",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Vagao/{{vagao1Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tremId\":{{tremId}},\"posicao\":1,\"capacidadePessoas\":100,\"quantidadePessoas\":30}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Atualizar vagão 2 para o cenário 300/180",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Vagao/{{vagao2Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tremId\":{{tremId}},\"posicao\":2,\"capacidadePessoas\":100,\"quantidadePessoas\":40}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Atualizar vagão 3 para o cenário 300/180",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Vagao/{{vagao3Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tremId\":{{tremId}},\"posicao\":3,\"capacidadePessoas\":100,\"quantidadePessoas\":50}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Avaliar reforço — 120 pessoas sem espaço",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Comparação da ocupação atual\", () => { const r = pm.response.json(); pm.expect(r.quantidadePessoas).to.eql(300); pm.expect(r.capacidadeDisponivel).to.eql(180); pm.expect(r.pessoasSemEspaco).to.eql(120); pm.expect(r.avaliarReforco).to.eql(true); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/Plataforma/{{plataformaId}}/avaliar-capacidade?tremId={{tremId}}"
+          }
+        },
+        {
+          "name": "Atualizar plataforma para 100 pessoas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Plataforma/{{plataformaId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Plataforma 1\",\"sentido\":\"Terminal Norte\",\"estacaoId\":{{estacaoId}},\"quantidadePessoas\":100}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Consultar demanda atendida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Comparação da ocupação atual\", () => { const r = pm.response.json(); pm.expect(r.quantidadePessoas).to.eql(100); pm.expect(r.capacidadeDisponivel).to.eql(180); pm.expect(r.pessoasSemEspaco).to.eql(0); pm.expect(r.avaliarReforco).to.eql(false); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/Plataforma/{{plataformaId}}/avaliar-capacidade?tremId={{tremId}}"
+          }
+        },
+        {
+          "name": "Limpar leitura do vagão 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Vagao/{{vagao1Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tremId\":{{tremId}},\"posicao\":1,\"capacidadePessoas\":100,\"quantidadePessoas\":null}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Rejeitar avaliação com leitura ausente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/Plataforma/{{plataformaId}}/avaliar-capacidade?tremId={{tremId}}"
+          }
+        },
+        {
+          "name": "Restaurar leitura do vagão 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Vagao/{{vagao1Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tremId\":{{tremId}},\"posicao\":1,\"capacidadePessoas\":100,\"quantidadePessoas\":30}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Atualizar plataforma para 300 pessoas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Plataforma/{{plataformaId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Plataforma 1\",\"sentido\":\"Terminal Norte\",\"estacaoId\":{{estacaoId}},\"quantidadePessoas\":300}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Alerta operacional",
       "item": [
         {

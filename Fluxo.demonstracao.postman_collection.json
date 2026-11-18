@@ -176,7 +176,7 @@
             "url": "{{baseUrl}}/api/Plataforma",
             "body": {
               "mode": "raw",
-              "raw": "{\"nome\":\"Plataforma DEMO\", \"sentido\":\"Terminal Norte\", \"estacaoId\":{{demoEstacaoId}}}",
+              "raw": "{\"nome\":\"Plataforma DEMO\", \"sentido\":\"Terminal Norte\", \"estacaoId\":{{demoEstacaoId}},\"quantidadePessoas\":300}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -633,6 +633,26 @@
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/api/Trem/{{demoTremId}}/lotacao"
+          }
+        },
+        {
+          "name": "Comparar plataforma e trem — 300 pessoas e 110 lugares atuais",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"190 pessoas podem ficar sem espaço\", () => { const r=pm.response.json(); pm.expect(r.quantidadePessoas).to.eql(300); pm.expect(r.capacidadeDisponivel).to.eql(110); pm.expect(r.pessoasSemEspaco).to.eql(190); pm.expect(r.avaliarReforco).to.eql(true); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/Plataforma/{{demoPlataformaId}}/avaliar-capacidade?tremId={{demoTremId}}"
           }
         },
         {
@@ -1188,6 +1208,39 @@
             "body": {
               "mode": "raw",
               "raw": "{\"tremId\":{{demoTremId}},\"posicao\":3,\"capacidadePessoas\":100,\"quantidadePessoas\":90}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Atualizar ocupação direta da plataforma",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Plataforma/{{demoPlataformaId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Plataforma DEMO\",\"sentido\":\"Terminal Norte\",\"estacaoId\":{{demoEstacaoId}},\"quantidadePessoas\":300}",
               "options": {
                 "raw": {
                   "language": "json"

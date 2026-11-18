@@ -51,6 +51,53 @@ As consultas `/api/Vagao/{id}/lotacao` e `/api/Trem/{id}/lotacao` já usam
 medições e alertas persistidos será feita na etapa de redução das entidades.
 A avaliação histórica por parada continua usando medições até essa retirada.
 
+## Comparação simplificada da capacidade
+
+Use `GET /api/Plataforma/{id}/avaliar-capacidade?tremId=1`, substituindo os
+dois IDs pelos registros do seu cenário. A consulta compara a quantidade
+atual na plataforma com o espaço livre do trem escolhido. Para cada vagão,
+calcula `máximo(0, capacidade − quantidadePessoas)` e soma o espaço disponível.
+A diferença positiva entre pessoas esperando e espaço disponível indica
+quantas podem ficar sem espaço. Uma lotação acima de 100% contribui com zero
+espaço livre, e a soma usa `long` para suportar várias capacidades inteiras.
+
+Com capacidade 100 em cada vagão e ocupações 30, 70 e 90, há 110 lugares
+disponíveis agora. Para 300 pessoas esperando, o resultado indica 190 pessoas
+sem espaço. Para demonstrar 300/180, use ocupações 30, 40 e 50, resultando em
+180 lugares e 120 pessoas sem espaço.
+
+Exemplo de resposta para esse segundo cenário:
+
+```json
+{
+  "plataformaId": 1,
+  "tremId": 1,
+  "avaliadoEm": "2026-11-18T00:00:00Z",
+  "quantidadePessoas": 300,
+  "capacidadeDisponivel": 180,
+  "pessoasSemEspaco": 120,
+  "avaliarReforco": true,
+  "mensagem": "Capacidade insuficiente para as pessoas esperando. Avaliar reforço do serviço."
+}
+```
+
+Quando há espaço suficiente, `pessoasSemEspaco` é zero, `avaliarReforco` é
+`false` e a mensagem informa que o trem comporta a demanda atual. O resultado
+é uma consulta calculada, sem gravar alerta. A escolha do trem é explícita,
+sem depender de parada programada ou de previsão de desembarque.
+
+Plataforma ou trem inexistente retorna `404`. `tremId` ausente, não inteiro
+ou menor que um retorna `400`. Também retorna `400` se o trem não tiver vagões
+ou se a plataforma ou algum vagão estiver com contagem desconhecida, negativa,
+sem horário, no futuro ou com leitura de mais de cinco minutos. Capacidade
+inválida de um vagão também impede a avaliação. Atualize as contagens pelos
+CRUDs antes de consultar. Uma quantidade de zero continua sendo válida.
+
+A pasta “Avaliação simplificada de capacidade” da coleção Postman principal
+prepara 300/180, confere 120 pessoas sem espaço, demonstra demanda atendida
+e verifica a rejeição de uma leitura ausente. Esta etapa não exige migration
+adicional, usando as colunas de `AddOcupacaoAtual`.
+
 ## Como executar
 
 Na pasta que contém o arquivo `Fluxo_GS_2026_2TDSPR.csproj`, tenha o SDK do .NET 8 e acesso ao Oracle da FIAP. Se o comando `dotnet ef` ainda estiver indisponível, instale a ferramenta:
