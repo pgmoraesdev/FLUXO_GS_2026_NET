@@ -22,6 +22,19 @@ public class TremController : ControllerBase
 
     public record TremResponse(int Id, string Codigo);
 
+    [HttpGet("{id}/lotacao")]
+    public async Task<ActionResult<List<LotacaoResponse>>> GetLotacao(int id, CancellationToken cancellationToken)
+    {
+        if (!await dbContext.Trens.AnyAsync(t => t.Id == id, cancellationToken))
+            return Problem(statusCode: 404, detail: "Trem não encontrado.");
+
+        var vagoes = await dbContext.Vagoes.AsNoTracking()
+            .Where(v => v.TremId == id).OrderBy(v => v.Posicao)
+            .ToListAsync(cancellationToken);
+        var agora = DateTime.UtcNow;
+        return Ok(vagoes.Select(v => LotacaoResponse.Criar(v, agora)).ToList());
+    }
+
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<List<TremResponse>>> GetAll(CancellationToken cancellationToken)

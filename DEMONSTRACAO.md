@@ -1,6 +1,6 @@
 # FLUXO — roteiro de demonstração
 
-## Cenário simplificado — preparação dos passos 1 e 2
+## Cenário simplificado em andamento
 
 O roteiro final será reduzido para uma estação, uma plataforma, um trem e três
 vagões. Nesta etapa, cadastre a estação e o trem pelas rotas existentes. Em
@@ -13,9 +13,10 @@ Consulte os registros com `GET` para mostrar as contagens e o horário automáti
 Use `PUT` com os campos completos para substituir uma contagem, mostrar um
 vagão vazio com zero ou representar ausência de leitura com `null`.
 
-As próximas etapas adaptarão a classificação de lotação e a comparação com o
-espaço do trem para esses campos. O roteiro histórico abaixo continua usando
-as medições e paradas enquanto essa adaptação está em andamento.
+A classificação já usa os campos diretos dos vagões. Consulte
+`GET /api/Trem/{id}/lotacao` para mostrar as três faixas, em ordem de posição.
+O roteiro histórico abaixo ainda usa medições e paradas para a previsão de
+desembarques e o alerta persistido.
 
 Todos os dados deste roteiro são **simulados**. A API não está conectada a
 câmeras, sensores ou à operação de uma linha real. O objetivo é demonstrar como
@@ -44,9 +45,10 @@ dotnet run --project Fluxo_GS_2026_2TDSPR.csproj --launch-profile http
 6. Execute a pasta **Apresentação**, na ordem. Abra as respostas dos passos
    indicados abaixo para explicar os resultados.
 
-As medições valem por cinco minutos. Se a demonstração demorar, execute a pasta
-**Atualizar medições** e repita as consultas. Essa pasta atualiza os registros
-existentes; não cadastra outros e não reabre o alerta encerrado. Para apresentar
+As leituras valem por cinco minutos. Se a demonstração demorar, execute a pasta
+**Atualizar medições** e repita as consultas. Essa pasta também atualiza a
+ocupação direta dos vagões pelo CRUD. Ela atualiza os registros existentes;
+não cadastra outros e não reabre o alerta encerrado. Para apresentar
 novamente a criação de um alerta `201`, limpe a execução anterior e comece uma
 nova Preparação.
 

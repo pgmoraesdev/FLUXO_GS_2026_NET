@@ -253,7 +253,7 @@
             "url": "{{baseUrl}}/api/Vagao",
             "body": {
               "mode": "raw",
-              "raw": "{\"tremId\":{{demoTremId}},\"posicao\":1,\"capacidadePessoas\":100}",
+              "raw": "{\"tremId\":{{demoTremId}},\"posicao\":1,\"capacidadePessoas\":100,\"quantidadePessoas\":30}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -296,7 +296,7 @@
             "url": "{{baseUrl}}/api/Vagao",
             "body": {
               "mode": "raw",
-              "raw": "{\"tremId\":{{demoTremId}},\"posicao\":2,\"capacidadePessoas\":100}",
+              "raw": "{\"tremId\":{{demoTremId}},\"posicao\":2,\"capacidadePessoas\":100,\"quantidadePessoas\":70}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -339,7 +339,7 @@
             "url": "{{baseUrl}}/api/Vagao",
             "body": {
               "mode": "raw",
-              "raw": "{\"tremId\":{{demoTremId}},\"posicao\":3,\"capacidadePessoas\":100}",
+              "raw": "{\"tremId\":{{demoTremId}},\"posicao\":3,\"capacidadePessoas\":100,\"quantidadePessoas\":90}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1089,6 +1089,105 @@
             "body": {
               "mode": "raw",
               "raw": "{\"plataformaId\":{{demoPlataformaId}},\"quantidadePessoas\":300,\"medidaEm\":\"{{demoMedidaEm}}\",\"origem\":\"Simulacao\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Atualizar ocupação direta do vagão 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Vagao/{{demoVagao1Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tremId\":{{demoTremId}},\"posicao\":1,\"capacidadePessoas\":100,\"quantidadePessoas\":30}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Atualizar ocupação direta do vagão 2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Vagao/{{demoVagao2Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tremId\":{{demoTremId}},\"posicao\":2,\"capacidadePessoas\":100,\"quantidadePessoas\":70}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Atualizar ocupação direta do vagão 3",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Vagao/{{demoVagao3Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tremId\":{{demoTremId}},\"posicao\":3,\"capacidadePessoas\":100,\"quantidadePessoas\":90}",
               "options": {
                 "raw": {
                   "language": "json"

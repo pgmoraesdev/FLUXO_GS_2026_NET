@@ -2567,20 +2567,107 @@
       "name": "Sinalização de lotação",
       "item": [
         {
-          "name": "Consultar sinalização da composição",
+          "name": "Atualizar ocupação direta do vagão 1 para 50",
           "event": [
             {
-              "listen": "prerequest",
+              "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"tremId\") || \"\"))) { pm.execution.skipRequest(); }",
-                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao1Id\") || \"\"))) { pm.execution.skipRequest(); }",
-                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao2Id\") || \"\"))) { pm.execution.skipRequest(); }",
-                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao3Id\") || \"\"))) { pm.execution.skipRequest(); }"
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
                 ]
               }
-            },
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Vagao/{{vagao1Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tremId\":{{tremId}},\"posicao\":1,\"capacidadePessoas\":100,\"quantidadePessoas\":50}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Atualizar ocupação direta do vagão 2 para 60",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Vagao/{{vagao2Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tremId\":{{tremId}},\"posicao\":2,\"capacidadePessoas\":100,\"quantidadePessoas\":60}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Atualizar ocupação direta do vagão 3 para 90",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Vagao/{{vagao3Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tremId\":{{tremId}},\"posicao\":3,\"capacidadePessoas\":100,\"quantidadePessoas\":90}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Consultar sinalização da composição",
+          "event": [
             {
               "listen": "test",
               "script": {
@@ -2602,17 +2689,6 @@
           "name": "Simular 40 pessoas no vagão 1",
           "event": [
             {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.collectionVariables.set(\"medicaoVagaoEm\", new Date(Date.now() - 1000).toISOString());",
-                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao1Id\") || \"\"))) { pm.execution.skipRequest(); }",
-                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"parada2Id\") || \"\"))) { pm.execution.skipRequest(); }"
-                ]
-              }
-            },
-            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -2630,10 +2706,10 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/MedicaoVagao/{{medicaoVagao1Id}}",
+            "url": "{{baseUrl}}/api/Vagao/{{vagao1Id}}",
             "body": {
               "mode": "raw",
-              "raw": "{\"vagaoId\": {{vagao1Id}}, \"paradaProgramadaId\": {{parada2Id}}, \"ocupacaoInicial\": 30, \"embarques\": 15, \"desembarques\": 5, \"medidaEm\": \"{{medicaoVagaoEm}}\", \"origem\": \"Simulacao\"}",
+              "raw": "{\"tremId\":{{tremId}},\"posicao\":1,\"capacidadePessoas\":100,\"quantidadePessoas\":40}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2645,15 +2721,6 @@
         {
           "name": "Conferir Com espaço",
           "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao1Id\") || \"\"))) { pm.execution.skipRequest(); }"
-                ]
-              }
-            },
             {
               "listen": "test",
               "script": {
@@ -2672,19 +2739,8 @@
           }
         },
         {
-          "name": "Simular leitura antiga",
+          "name": "Limpar ocupação do vagão 1",
           "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.collectionVariables.set(\"medicaoVagaoEm\", new Date(Date.now() - 6 * 60000).toISOString());",
-                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao1Id\") || \"\"))) { pm.execution.skipRequest(); }",
-                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"parada2Id\") || \"\"))) { pm.execution.skipRequest(); }"
-                ]
-              }
-            },
             {
               "listen": "test",
               "script": {
@@ -2703,10 +2759,10 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/MedicaoVagao/{{medicaoVagao1Id}}",
+            "url": "{{baseUrl}}/api/Vagao/{{vagao1Id}}",
             "body": {
               "mode": "raw",
-              "raw": "{\"vagaoId\": {{vagao1Id}}, \"paradaProgramadaId\": {{parada2Id}}, \"ocupacaoInicial\": 30, \"embarques\": 15, \"desembarques\": 5, \"medidaEm\": \"{{medicaoVagaoEm}}\", \"origem\": \"Simulacao\"}",
+              "raw": "{\"tremId\":{{tremId}},\"posicao\":1,\"capacidadePessoas\":100,\"quantidadePessoas\":null}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2719,21 +2775,12 @@
           "name": "Conferir Lotação indisponível",
           "event": [
             {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao1Id\") || \"\"))) { pm.execution.skipRequest(); }"
-                ]
-              }
-            },
-            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"Leitura antiga não representa contagem atual\", () => { const v = pm.response.json(); pm.expect(v.situacao).to.eql(\"Lotação indisponível\"); pm.expect(v.cor).to.eql(\"Cinza\"); pm.expect(v.ocupacaoEstimada).to.eql(null); pm.expect(v.percentualOcupacao).to.eql(null); });"
+                  "pm.test(\"Ausência de leitura resulta em indisponibilidade\", () => { const v = pm.response.json(); pm.expect(v.situacao).to.eql(\"Lotação indisponível\"); pm.expect(v.cor).to.eql(\"Cinza\"); pm.expect(v.ocupacaoEstimada).to.eql(null); pm.expect(v.percentualOcupacao).to.eql(null); });"
                 ]
               }
             }
@@ -2745,19 +2792,8 @@
           }
         },
         {
-          "name": "Restaurar leitura recente",
+          "name": "Restaurar ocupação do vagão 1",
           "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.collectionVariables.set(\"medicaoVagaoEm\", new Date(Date.now() - 1000).toISOString());",
-                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"medicaoVagao1Id\") || \"\"))) { pm.execution.skipRequest(); }",
-                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"parada2Id\") || \"\"))) { pm.execution.skipRequest(); }"
-                ]
-              }
-            },
             {
               "listen": "test",
               "script": {
@@ -2776,10 +2812,10 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/MedicaoVagao/{{medicaoVagao1Id}}",
+            "url": "{{baseUrl}}/api/Vagao/{{vagao1Id}}",
             "body": {
               "mode": "raw",
-              "raw": "{\"vagaoId\": {{vagao1Id}}, \"paradaProgramadaId\": {{parada2Id}}, \"ocupacaoInicial\": 30, \"embarques\": 15, \"desembarques\": 5, \"medidaEm\": \"{{medicaoVagaoEm}}\", \"origem\": \"Simulacao\"}",
+              "raw": "{\"tremId\":{{tremId}},\"posicao\":1,\"capacidadePessoas\":100,\"quantidadePessoas\":40}",
               "options": {
                 "raw": {
                   "language": "json"

@@ -2,7 +2,7 @@
 
 API da Global Solution 2026/2 da FIAP para um protótipo de monitoramento da lotação no transporte ferroviário. O projeto usa ASP.NET Core 8, Entity Framework Core e Oracle.
 
-## Simplificação em andamento — passos 1 e 2
+## Simplificação em andamento
 
 A entrega será demonstrada com uma estação, uma plataforma, um trem e três
 vagões. As contagens informadas pelo Postman representam os dados que câmeras
@@ -46,11 +46,10 @@ Aplique a migration `AddOcupacaoAtual` com `dotnet ef database update` antes
 de executar esta versão. Ela acrescenta quatro colunas opcionais e preserva
 as tabelas e os dados existentes.
 
-As consultas de lotação e avaliação descritas mais abaixo ainda usam as
-medições históricas. Sua adaptação para a ocupação direta, a retirada de
-paradas, medições e alertas persistidos e o roteiro final serão feitos nos
-próximos passos. A comparação simplificada usará o trem escolhido na consulta
-e seu espaço atual disponível.
+As consultas `/api/Vagao/{id}/lotacao` e `/api/Trem/{id}/lotacao` já usam
+`QuantidadePessoas` e `AtualizadoEm` dos próprios vagões. A retirada de paradas,
+medições e alertas persistidos será feita na etapa de redução das entidades.
+A avaliação histórica por parada continua usando medições até essa retirada.
 
 ## Como executar
 
@@ -300,7 +299,7 @@ das paradas e vagões. Os dados da coleção são simulações.
 
 ## Sinalização de lotação por vagão
 
-Os endpoints abaixo transformam a última medição em informação para os futuros
+Os endpoints abaixo transformam a ocupação direta do vagão em informação para os futuros
 visores externos. A resposta contém texto e cor; esta etapa entrega a regra
 pela API, ainda sem uma tela de visor.
 
@@ -320,9 +319,9 @@ Esses limites não são normas de operação ferroviária. O percentual é calcu
 por `100 × ocupacaoEstimada / capacidadePessoas`, sem limitar o resultado a 100%.
 A classificação usa o valor calculado, sem arredondamento.
 
-A consulta considera o horário UTC atual. Leituras no futuro são ignoradas,
-a leitura mais recente é escolhida por horário (maior ID em empate), e a
-validade é de até cinco minutos. Capacidade não positiva ou ocupação negativa
+A consulta usa `QuantidadePessoas` e `AtualizadoEm` do cadastro do vagão,
+atualizados pelo `PUT /api/Vagao/{id}`. A validade é de até cinco minutos.
+Quantidade ou horário ausente, horário no futuro, capacidade não positiva ou ocupação negativa
 em dados legados também resulta em indisponibilidade.
 
 Exemplo de resposta para capacidade 100 e ocupação 40:
@@ -342,20 +341,23 @@ Exemplo de resposta para capacidade 100 e ocupação 40:
 
 Sem leitura válida, a resposta continua sendo `200`, com situação
 “Lotação indisponível”, cor “Cinza”, ocupação e percentual `null`. `medidaEm`
-guarda o horário da última leitura passada, mesmo quando antiga, ou `null`
-se não houver leitura. Assim, ausência de informação não é confundida com vagão
+guarda o horário da atualização direta, mesmo quando antiga, ou `null`
+se não houver horário. Assim, ausência de informação não é confundida com vagão
 vazio. Vagão ou trem inexistente retorna `404` JSON; trem sem vagões retorna
 `200` com `[]`.
 
-Os endpoints `/ultima-ocupacao` continuam retornando a última medição histórica,
-mesmo antiga. Para sinalização atual, use `/lotacao`. A classificação é feita na
-consulta, não altera medições e não exige nova migration.
+Os endpoints `/ultima-ocupacao` continuam retornando medições históricas.
+Para sinalização atual, use `/lotacao`, que lê os campos diretos do vagão.
+Na resposta, `ocupacaoEstimada` corresponde a `QuantidadePessoas` e `medidaEm`
+corresponde a `AtualizadoEm`, mantendo o formato anterior da consulta.
+A classificação é feita durante a consulta e não exige nova migration além
+de `AddOcupacaoAtual`.
 
-A pasta “Sinalização de lotação” no Postman consulta a composição, corrige uma
-leitura para demonstrar “Com espaço”, simula uma leitura antiga para demonstrar
-indisponibilidade e depois restaura o horário. Execute a coleção na ordem
-completa; se demorar mais de cinco minutos após os cadastros, atualize as
-medições para consultar as faixas atuais. A avaliação de demanda e os alertas são descritos adiante.
+A pasta “Sinalização de lotação” no Postman atualiza os vagões pelo CRUD e
+consulta a composição. Depois mostra “Com espaço”, envia uma quantidade `null`
+para demonstrar indisponibilidade e restaura a contagem. Execute a coleção na
+ordem completa. Se a demonstração demorar mais de cinco minutos, repita os
+`PUT` dos vagões para renovar as leituras. O horário é automático no servidor.
 
 ## Avaliação da demanda e alerta operacional
 

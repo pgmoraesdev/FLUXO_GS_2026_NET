@@ -27,6 +27,17 @@ public class VagaoController : ControllerBase
     public record VagaoResponse(int Id, int TremId, int Posicao, int CapacidadePessoas,
         int? QuantidadePessoas, DateTime? AtualizadoEm);
 
+    [HttpGet("{id}/lotacao")]
+    public async Task<ActionResult<LotacaoResponse>> GetLotacao(int id, CancellationToken cancellationToken)
+    {
+        var vagao = await dbContext.Vagoes.AsNoTracking()
+            .SingleOrDefaultAsync(v => v.Id == id, cancellationToken);
+        if (vagao is null)
+            return Problem(statusCode: 404, detail: "Vagão não encontrado.");
+
+        return Ok(LotacaoResponse.Criar(vagao, DateTime.UtcNow));
+    }
+
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<List<VagaoResponse>>> GetAll(CancellationToken cancellationToken)
