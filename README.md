@@ -1,518 +1,174 @@
-# FLUXO_GS_2026_NET
+# Projeto FLUXO — Global Solution 2026/2 .NET
 
-API da Global Solution 2026/2 da FIAP para um protótipo de monitoramento da lotação no transporte ferroviário. O projeto usa ASP.NET Core 8, Entity Framework Core e Oracle.
+## Sobre o projeto
 
-## Simplificação em andamento
+A lotação no transporte público ferroviário dificulta o embarque e pode concentrar passageiros em alguns vagões enquanto outros ainda possuem espaço.
 
-A entrega será demonstrada com uma estação, uma plataforma, um trem e três
-vagões. As contagens informadas pelo Postman representam os dados que câmeras
-poderiam enviar. O modelo final terá quatro entidades: `Estacao`, `Plataforma`,
-`Trem` e `Vagao`, com a ocupação mais recente guardada na própria plataforma
-e no próprio vagão.
+O FLUXO propõe usar contagens de pessoas para informar a ocupação dos vagões e ajudar a companhia a acompanhar a demanda nas plataformas. O passageiro poderá identificar onde há mais espaço antes de embarcar. A operadora poderá comparar quantas pessoas estão esperando com a capacidade disponível de um trem e avaliar a necessidade de reforço do serviço.
 
-Nesta etapa, os CRUDs de plataforma e vagão já recebem o campo opcional
-`quantidadePessoas`. A API grava `atualizadoEm` automaticamente em UTC quando
-recebe uma contagem, inclusive zero. Quantidade negativa retorna `400`.
-`null` significa ocupação desconhecida e deixa o horário vazio. Registros
-anteriores à migration também começam com os dois campos vazios.
+Este projeto é a API da solução CitizenTech desenvolvida para a Global Solution 2026/2 da FIAP, no eixo Cidades, com foco em mobilidade. O protótipo usa dados simulados, informados pelo Postman. A integração com câmeras e os visores físicos são possibilidades de evolução da solução.
 
-Exemplos de cadastro ou substituição pelo `PUT`, usando IDs existentes:
+## Integrantes — 2TDSPR
 
-```json
-{
-  "nome": "Plataforma 1",
-  "sentido": "Terminal Norte",
-  "estacaoId": 1,
-  "quantidadePessoas": 300
-}
+| **Nome** | **RM** |
+| --- | --- |
+| Luana Alves de Oliveira | 566621 |
+| Isabely Marques da Silva | 566663 |
+| Mateus Ribeiro Azevedo | 566630 |
+| Paulo Gustavo Moraes de Sousa | 568580 |
+
+## O que foi desenvolvido
+
+Foi desenvolvida uma API REST em **C# com ASP.NET Core 8**, utilizando controllers, **Entity Framework Core** e persistência no **Oracle da FIAP**. As alterações do banco são versionadas por migrations.
+
+O modelo possui quatro entidades e dois relacionamentos 1:N. Uma estação possui várias plataformas e um trem possui vários vagões.
+
+| Entidade | Principais atributos |
+| --- | --- |
+| Estação | Identificador e nome. |
+| Plataforma | Identificador, estação, nome, sentido, quantidade atual de pessoas e horário da atualização. |
+| Trem | Identificador e código. |
+| Vagão | Identificador, trem, posição, capacidade, quantidade atual de pessoas e horário da atualização. |
+
+Cada atualização substitui a ocupação anterior. O protótipo guarda a contagem mais recente diretamente na plataforma e no vagão.
+
+## Arquitetura e organização
+
+```text
+├── Controllers/
+│   ├── EstacaoController.cs
+│   ├── PlataformaController.cs
+│   ├── TremController.cs
+│   └── VagaoController.cs
+├── Data/
+│   └── AppDbContext.cs
+├── Models/
+│   ├── Estacao.cs
+│   ├── Plataforma.cs
+│   ├── Trem.cs
+│   ├── Vagao.cs
+│   └── LotacaoResponse.cs
+├── Migrations/
+├── Program.cs
+├── appsettings.json
+├── Fluxo.postman_collection.json
+├── Fluxo.demonstracao.postman_collection.json
+└── DEMONSTRACAO.md
 ```
 
-```json
-{
-  "tremId": 1,
-  "posicao": 1,
-  "capacidadePessoas": 100,
-  "quantidadePessoas": 30
-}
-```
+- **Models** representa as entidades. `LotacaoResponse` organiza a resposta de lotação e sua classificação.
+- **Controllers** recebe as requisições, valida os dados e executa os cadastros e as consultas.
+- **Data** configura o contexto e os relacionamentos usados pelo Entity Framework Core.
+- **Migrations** registra as alterações na estrutura do Oracle.
+- **Program.cs** configura os controllers, a conexão com o banco e a documentação interativa da API.
+- **Coleções Postman** fornecem exemplos para testar os CRUDs e apresentar o protótipo.
 
-As consultas e as respostas de cadastro incluem a quantidade e o horário.
-Cada `PUT` substitui a contagem anterior. Envie todos os campos do cadastro
-e a quantidade atual; omitir `quantidadePessoas` ou enviar `null` limpa a
-contagem e o horário. Uma contagem acima da capacidade é aceita para representar
-superlotação. O horário é gerado pelo servidor, sem precisar enviá-lo no JSON.
+## Funcionalidades
 
-Aplique a migration `AddOcupacaoAtual` com `dotnet ef database update` antes
-de executar esta versão. Ela acrescenta quatro colunas opcionais e preserva
-as tabelas e os dados existentes.
+- Cadastrar, listar, consultar por ID, alterar e excluir estações, plataformas, trens e vagões.
+- Atualizar a quantidade atual de pessoas na plataforma e em cada vagão.
+- Consultar a faixa de lotação de um vagão ou de todos os vagões de um trem.
+- Comparar a demanda da plataforma com o espaço disponível no trem escolhido.
+- Retornar uma indicação para avaliar reforço do serviço quando a capacidade for insuficiente.
 
-As consultas `/api/Vagao/{id}/lotacao` e `/api/Trem/{id}/lotacao` já usam
-`QuantidadePessoas` e `AtualizadoEm` dos próprios vagões. A retirada de paradas,
-medições e alertas persistidos será feita na etapa de redução das entidades.
-A avaliação histórica por parada continua usando medições até essa retirada.
+## Validações e regras de negócio
 
-## Comparação simplificada da capacidade
+Os nomes, o sentido da plataforma e o código do trem são obrigatórios. O nome da estação, o nome da plataforma e o sentido aceitam até 2000 caracteres. O código do trem aceita até 50 caracteres.
 
-Use `GET /api/Plataforma/{id}/avaliar-capacidade?tremId=1`, substituindo os
-dois IDs pelos registros do seu cenário. A consulta compara a quantidade
-atual na plataforma com o espaço livre do trem escolhido. Para cada vagão,
-calcula `máximo(0, capacidade − quantidadePessoas)` e soma o espaço disponível.
-A diferença positiva entre pessoas esperando e espaço disponível indica
-quantas podem ficar sem espaço. Uma lotação acima de 100% contribui com zero
-espaço livre, e a soma usa `long` para suportar várias capacidades inteiras.
+Os IDs de vínculo, a posição do vagão e sua capacidade devem ser maiores que zero. A estação e o trem referenciados precisam existir. O código do trem e a posição de um vagão dentro do mesmo trem devem ser únicos.
 
-Com capacidade 100 em cada vagão e ocupações 30, 70 e 90, há 110 lugares
-disponíveis agora. Para 300 pessoas esperando, o resultado indica 190 pessoas
-sem espaço. Para demonstrar 300/180, use ocupações 30, 40 e 50, resultando em
-180 lugares e 120 pessoas sem espaço.
+`quantidadePessoas` aceita zero ou um inteiro positivo. O valor `null` representa uma ocupação desconhecida. Ao receber uma contagem, a API registra `atualizadoEm` automaticamente em UTC. No `PUT`, envie todos os campos do cadastro e a contagem atual. Omitir a quantidade ou enviar `null` limpa a contagem e o horário.
 
-Exemplo de resposta para esse segundo cenário:
+A lotação é calculada pela quantidade de pessoas dividida pela capacidade do vagão. As faixas e a validade de cinco minutos são escolhas da simulação acadêmica.
 
-```json
-{
-  "plataformaId": 1,
-  "tremId": 1,
-  "avaliadoEm": "2026-11-18T00:00:00Z",
-  "quantidadePessoas": 300,
-  "capacidadeDisponivel": 180,
-  "pessoasSemEspaco": 120,
-  "avaliarReforco": true,
-  "mensagem": "Capacidade insuficiente para as pessoas esperando. Avaliar reforço do serviço."
-}
-```
+| Ocupação | Situação | Cor |
+| --- | --- | --- |
+| Menos de 50% | Com espaço | Verde |
+| De 50% a menos de 80% | Ocupado | Amarelo |
+| 80% ou mais | Muito cheio | Vermelho |
+| Quantidade ou horário ausente, leitura antiga ou dados inválidos | Lotação indisponível | Cinza |
 
-Quando há espaço suficiente, `pessoasSemEspaco` é zero, `avaliarReforco` é
-`false` e a mensagem informa que o trem comporta a demanda atual. O resultado
-é uma consulta calculada, sem gravar alerta. A escolha do trem é explícita,
-sem depender de parada programada ou de previsão de desembarque.
-
-Plataforma ou trem inexistente retorna `404`. `tremId` ausente, não inteiro
-ou menor que um retorna `400`. Também retorna `400` se o trem não tiver vagões
-ou se a plataforma ou algum vagão estiver com contagem desconhecida, negativa,
-sem horário, no futuro ou com leitura de mais de cinco minutos. Capacidade
-inválida de um vagão também impede a avaliação. Atualize as contagens pelos
-CRUDs antes de consultar. Uma quantidade de zero continua sendo válida.
-
-A pasta “Avaliação simplificada de capacidade” da coleção Postman principal
-prepara 300/180, confere 120 pessoas sem espaço, demonstra demanda atendida
-e verifica a rejeição de uma leitura ausente. Esta etapa não exige migration
-adicional, usando as colunas de `AddOcupacaoAtual`.
+Uma contagem acima da capacidade é aceita para representar superlotação. A comparação de capacidade soma o espaço livre de cada vagão, com mínimo de zero, e compara o total com as pessoas esperando. Ela exige leituras válidas de até cinco minutos na plataforma e em todos os vagões do trem. A escolha do trem é informada na consulta. A decisão de reforçar o serviço cabe à operadora.
 
 ## Como executar
 
-Na pasta que contém o arquivo `Fluxo_GS_2026_2TDSPR.csproj`, tenha o SDK do .NET 8 e acesso ao Oracle da FIAP. Se o comando `dotnet ef` ainda estiver indisponível, instale a ferramenta:
+Tenha o **SDK do .NET 8**, acesso ao Oracle da FIAP e o Postman para seguir os exemplos.
+
+1. Clone o repositório e entre na pasta do projeto.
+
+```powershell
+git clone https://github.com/pgmoraesdev/FLUXO_GS_2026_NET.git
+cd FLUXO_GS_2026_NET
+```
+
+2. Se a ferramenta `dotnet ef` ainda estiver ausente, instale-a.
 
 ```powershell
 dotnet tool install --global dotnet-ef --version 8.0.33
 ```
 
-Configure a conexão localmente com User Secrets. Substitua os valores do exemplo pelos dados da sua conta Oracle:
+3. Configure a conexão usando os dados da sua conta Oracle. Substitua os valores do exemplo pelas informações fornecidas pela FIAP. O comando guarda a conexão em User Secrets na sua máquina.
 
 ```powershell
 dotnet user-secrets set "ConnectionStrings:OracleConnection" "User Id=SEU_USUARIO;Password=SUA_SENHA;Data Source=HOST:PORTA/SERVICO"
+```
+
+4. Restaure os pacotes e confira a compilação.
+
+```powershell
 dotnet restore
+dotnet build
+```
+
+5. Confira o schema configurado e aplique as migrations. A migration `RemoveEntidadesHistoricas` apaga as quatro tabelas antigas de medições, paradas e alertas, incluindo seus registros. As tabelas de estação, plataforma, trem e vagão são preservadas.
+
+```powershell
 dotnet ef database update
-dotnet run
 ```
 
-O comando `dotnet ef database update` aplica as migrations pendentes. Elas criam as tabelas de estações, plataformas, trens, vagões e paradas programadas.
+6. Inicie a API com o perfil HTTP.
 
-## Como testar no Postman
-
-Use como base a URL mostrada no terminal quando a API iniciar. As rotas de cadastro disponíveis são `/api/Estacao`, `/api/Plataforma`, `/api/Trem` e `/api/Vagao`. Todas aceitam `GET` e `POST` na rota base, e `GET`, `PUT` e `DELETE` com `/{id}`.
-
-1. Envie `POST /api/Estacao` com `{"nome":"Estação Central"}` e copie o ID retornado.
-2. Envie `POST /api/Plataforma` com o JSON abaixo, usando o ID da estação. O esperado é `201 Created`.
-3. Use o ID da plataforma retornado para consultá-la com `GET`, alterá-la com `PUT` ou removê-la com `DELETE`. Para o `PUT`, envie os mesmos campos com os valores atualizados. `PUT` e `DELETE` retornam `204 No Content` em caso de sucesso.
-
-```json
-{
-  "nome": "Plataforma 1",
-  "sentido": "Terminal Norte",
-  "estacaoId": 1
-}
+```powershell
+dotnet run --launch-profile http
 ```
 
-A documentação interativa também está disponível em `/scalar/v1` no ambiente de desenvolvimento.
+A URL configurada nesse perfil é `http://localhost:5248`. A documentação interativa fica em `http://localhost:5248/scalar/v1` no ambiente de desenvolvimento.
 
-## Composição com três vagões
+No Visual Studio, abra `Fluxo_GS_2026_2TDSPR.csproj`, selecione o perfil `http` e execute com **Ctrl + F5**. A configuração da conexão e a aplicação das migrations também são necessárias nesse fluxo.
 
-Cadastre um trem com `POST /api/Trem`, enviando `{"codigo":"FLUXO-01"}`.
-Use o ID retornado como `tremId` em três requisições `POST /api/Vagao`,
-com posições 1, 2 e 3. Exemplo para o primeiro vagão:
+## Como testar
 
-```json
-{
-  "tremId": 1,
-  "posicao": 1,
-  "capacidadePessoas": 100
-}
-```
+Importe `Fluxo.postman_collection.json`, ajuste a variável `baseUrl` se necessário e execute a coleção na ordem apresentada. Ela inclui os CRUDs, verificações de dados inválidos, sinalização de lotação e comparação de capacidade. A pasta de limpeza remove os registros criados durante a execução.
 
-O cadastro retorna `201 Created`, o cabeçalho `Location` e os campos `id`,
-`tremId`, `posicao` e `capacidadePessoas`. Consulte os vagões em `GET /api/Vagao`
-ou um registro em `GET /api/Vagao/{id}`. A listagem inclui todos os trens;
-use `tremId` da resposta para identificar a composição.
+As quatro rotas de cadastro são `/api/Estacao`, `/api/Plataforma`, `/api/Trem` e `/api/Vagao`.
 
-Para alterar um vagão, envie os mesmos três campos em `PUT /api/Vagao/{id}`.
-Para excluir, use `DELETE /api/Vagao/{id}`. Ambos retornam `204 No Content`.
-Os campos de entrada devem ser inteiros maiores que zero; valores inválidos
-retornam `400` em JSON. Trem ou vagão inexistente retorna `404` em JSON.
-Repetir a posição dentro do mesmo trem retorna `409` em JSON, inclusive no `PUT`.
-A mesma posição pode existir em trens diferentes. A exclusão de um trem remove
-seus vagões em cascata, conforme a migration existente.
+| Operação | Método e rota | Resposta esperada |
+| --- | --- | --- |
+| Listar | `GET /api/Entidade` | `200 OK` |
+| Consultar | `GET /api/Entidade/{id}` | `200 OK` ou `404 Not Found` |
+| Cadastrar | `POST /api/Entidade` | `201 Created` com o ID e o cabeçalho `Location` |
+| Alterar | `PUT /api/Entidade/{id}` | `204 No Content` |
+| Excluir | `DELETE /api/Entidade/{id}` | `204 No Content` |
+| Informar dados inválidos | `POST` ou `PUT` | `400 Bad Request` com mensagem JSON |
+| Informar ID inexistente | Operações que exigem um recurso existente | `404 Not Found` com mensagem JSON |
+| Repetir código de trem ou posição no mesmo trem | `POST` ou `PUT` | `409 Conflict` |
 
-Importe `Fluxo.postman_collection.json` e execute a coleção na ordem exibida.
-Ela cria um trem com três vagões, consulta o vínculo, verifica capacidade
-inválida e posição duplicada no cadastro e na alteração, altera a capacidade,
-exclui os vagões e confirma `404` após a exclusão. A limpeza do trem ocorre
-por último. Execute somente no banco/schema de teste confirmado.
+Substitua `Entidade` pelo nome da rota desejada. As consultas específicas são as seguintes.
 
-Não é necessária uma nova migration para esse CRUD: a entidade, a chave
-estrangeira e o índice único `(TremId, Posicao)` já estão versionados.
+| Consulta | Rota |
+| --- | --- |
+| Lotação de um vagão | `GET /api/Vagao/{id}/lotacao` |
+| Lotação do trem, por posição | `GET /api/Trem/{id}/lotacao` |
+| Comparação entre plataforma e trem | `GET /api/Plataforma/{id}/avaliar-capacidade?tremId={idDoTrem}` |
 
-## Contrato de estação
+Para apresentar o projeto, use a coleção menor `Fluxo.demonstracao.postman_collection.json` e siga o roteiro em [DEMONSTRACAO.md](DEMONSTRACAO.md).
 
-`POST /api/Estacao` e `PUT /api/Estacao/{id}` recebem apenas os dados
-`{"nome":"Estação Central"}`. O nome é obrigatório, deve ter até 2000 caracteres
-e é salvo sem espaços nas pontas. Nome ausente, nulo, vazio, somente com espaços
-ou acima do limite retorna `400` com erros de validação em JSON.
+## Persistência dos dados
 
-As respostas de cadastro e consulta de estação contêm apenas `id` e `nome`.
-Campos adicionais de entrada, como `id` e `plataformas`, não são usados para
-cadastrar a estação; as plataformas são cadastradas pela rota própria.
-A listagem retorna `200` com `[]` quando não existem estações, e os registros
-são ordenados por ID. Recurso inexistente retorna `404` em JSON Problem Details.
-O cadastro retorna `201` com `Location`; alteração e exclusão retornam `204`.
+Os cadastros e as contagens atuais são gravados no Oracle pelo Entity Framework Core. As migrations existentes mantêm o histórico das alterações do banco até o modelo atual.
 
-A coleção Postman inclui verificações de nome inválido no cadastro e na alteração.
-Essas mudanças não exigem migration: o limite segue a coluna Oracle existente.
+Para verificar a persistência, cadastre uma estação, copie seu ID e encerre a API. Inicie a API novamente com a mesma conexão e consulte `GET /api/Estacao/{id}`. O registro deverá continuar disponível. Faça essa verificação antes de executar a limpeza do Postman.
 
-## Paradas programadas e próxima chegada
+## Como o .NET se aplica à solução
 
-Uma parada representa uma passagem específica de um trem por uma plataforma.
-O mesmo trem pode ter várias paradas na mesma plataforma, em horários diferentes.
-Após atualizar o código, aplique a migration `AddParadasProgramadas` no seu
-schema de teste com `dotnet ef database update`.
-
-`/api/ParadaProgramada` aceita `GET` de lista e `POST`; com `/{id}`, aceita
-`GET`, `PUT` e `DELETE`. Exemplo de corpo para cadastro e alteração:
-
-```json
-{
-  "tremId": 1,
-  "plataformaId": 1,
-  "chegadaPrevistaEm": "2026-11-18T15:00:00Z",
-  "chegadaRealEm": null
-}
-```
-
-Use IDs existentes e ajuste a data para o futuro ao testar a próxima chegada.
-Os horários devem ser enviados em UTC, com sufixo `Z`. A chegada prevista é
-obrigatória, e a real é opcional. Horários sem fuso ou IDs não positivos retornam
-`400` JSON. Trem, plataforma ou parada inexistente retorna `404` JSON.
-O cadastro retorna `201` com `Location`; alteração e exclusão retornam `204`.
-O `PUT` substitui os quatro campos; envie `null` para limpar a chegada real.
-
-`GET /api/Plataforma/{id}/proxima-chegada` retorna a parada com menor horário
-previsto maior ou igual ao UTC atual e sem chegada real registrada. Em empate,
-usa o menor ID. Retorna `404` se a plataforma não existir ou não tiver chegada
-futura pendente. No MVP, uma parada atrasada cujo horário previsto já passou
-não aparece nessa consulta; atualize sua previsão pelo `PUT` quando necessário.
-
-A resposta contém `id`, `tremId`, `plataformaId`, `chegadaPrevistaEm` e
-`chegadaRealEm`. Os horários retornam com `Z`; o Oracle os guarda como UTC em
-`TIMESTAMP`, sem fuso. A listagem geral é ordenada por previsão e ID.
-
-Paradas impedem a exclusão do trem, da plataforma e da estação vinculada,
-retornando `409` JSON. Exclua as paradas antes desses cadastros. A coleção
-Postman inclui duas passagens, consulta da próxima chegada e avanço para a
-seguinte após registrar a chegada real. A limpeza respeita os vínculos.
-
-## Ocupação simulada da plataforma
-
-`MedicaoPlataforma` guarda a quantidade estimada de pessoas presentes na área de
-embarque. Essa medida é separada das entradas e saídas nos acessos da estação.
-Não é necessário enviar imagens ou vídeos: nesta etapa os dados são simulados.
-
-Após atualizar o código, aplique a migration `AddMedicoesPlataforma` no seu
-schema de teste com `dotnet ef database update`.
-
-Exemplo de `POST /api/MedicaoPlataforma` (use uma plataforma existente e ajuste
-`medidaEm` para um horário UTC atual ou passado):
-
-```json
-{
-  "plataformaId": 1,
-  "quantidadePessoas": 300,
-  "medidaEm": "2026-11-17T15:00:00Z",
-  "origem": "Simulacao"
-}
-```
-
-O cadastro retorna `201`, o cabeçalho `Location` e a medição com seu `id`.
-A quantidade é obrigatória e pode ser zero; valores negativos são inválidos.
-O horário é obrigatório, deve usar UTC com sufixo `Z` e não pode estar no futuro.
-A origem é obrigatória, tem até 50 caracteres e é salva sem espaços nas pontas.
-Entrada inválida retorna `400` JSON; plataforma inexistente retorna `404` JSON.
-
-Rotas disponíveis:
-
-| Método | Rota | Resultado no sucesso |
-|---|---|---|
-| GET | `/api/MedicaoPlataforma` | `200`, histórico do horário mais recente ao mais antigo; `[]` se vazio |
-| GET | `/api/MedicaoPlataforma/{id}` | `200`, medição por ID |
-| POST | `/api/MedicaoPlataforma` | `201`, cadastra uma leitura |
-| PUT | `/api/MedicaoPlataforma/{id}` | `204`, corrige a leitura com os mesmos quatro campos |
-| DELETE | `/api/MedicaoPlataforma/{id}` | `204`, exclui a leitura |
-| GET | `/api/Plataforma/{id}/ultima-ocupacao` | `200`, última leitura daquela plataforma |
-
-As operações por ID retornam `404` se a medição não existir. A consulta da última
-ocupação também retorna `404` se a plataforma não existir ou não tiver medições.
-Ela usa o maior `medidaEm` que não esteja no futuro e, em empate, o maior ID.
-Assim, enviar uma leitura antiga depois não muda qual é a mais recente.
-A resposta inclui o horário em UTC. Ela representa a última leitura registrada,
-não garante uma ocupação atual: a sinalização de vagões usa a validade de cinco minutos descrita abaixo;
-a ocupação da plataforma continua disponível como leitura histórica. Dados antigos continuam disponíveis no histórico.
-
-Uma plataforma com medições não pode ser excluída (resposta `409`), nem sua
-estação. Exclua as medições antes desses cadastros. A coleção Postman inclui o
-cenário de 300 pessoas, a correção para 280, a consulta da última ocupação,
-validação de quantidade negativa e limpeza na ordem dos relacionamentos.
-
-## Ocupação simulada dos vagões
-
-`MedicaoVagao` registra a contagem de um vagão em um horário. A API calcula:
-
-`ocupacaoEstimada = ocupacaoInicial + embarques - desembarques`
-
-Cada leitura é independente: `ocupacaoInicial` é a base antes dos movimentos
-informados naquela requisição. Para continuar uma contagem, envie a ocupação
-estimada anterior como base da próxima leitura. A API não soma automaticamente
-as leituras do histórico e não recalcula outras leituras ao corrigir uma delas.
-
-Aplique a migration `AddMedicoesVagao` no seu schema de teste antes de usar as
-rotas. Exemplo de `POST /api/MedicaoVagao` (ajuste o ID e o horário):
-
-```json
-{
-  "vagaoId": 1,
-  "paradaProgramadaId": null,
-  "ocupacaoInicial": 40,
-  "embarques": 15,
-  "desembarques": 5,
-  "medidaEm": "2026-11-17T18:00:00Z",
-  "origem": "Simulacao"
-}
-```
-
-O resultado desse exemplo é `ocupacaoEstimada: 50`. Esse campo é calculado pela
-API, e não recebido como entrada. A resposta inclui também os dados da leitura
-e seu ID. `POST` retorna `201` com `Location`.
-
-O vínculo com a parada é opcional. Se informado, a parada deve existir e seu
-trem deve ser o mesmo do vagão. Vínculo com trem diferente retorna `400` JSON;
-vagão ou parada inexistente retorna `404` JSON. Sem parada, use `null` ou omita
-`paradaProgramadaId`.
-
-As três contagens são obrigatórias, aceitam zero e não podem ser negativas.
-O resultado deve ficar entre zero e 2147483647. A contagem não é limitada à
-capacidade cadastrada: trata-se de uma estimativa, e excesso de ocupação deve
-continuar visível para a futura sinalização. Horário UTC com `Z` é obrigatório,
-não pode estar no futuro, e origem deve conter de 1 a 50 caracteres não vazios
-(a API remove espaços nas pontas). Dados inválidos retornam `400` JSON.
-
-| Método | Rota | Resultado no sucesso |
-|---|---|---|
-| GET | `/api/MedicaoVagao` | `200`, histórico do mais recente ao mais antigo |
-| GET | `/api/MedicaoVagao/{id}` | `200`, leitura por ID |
-| POST | `/api/MedicaoVagao` | `201`, registra e calcula a ocupação |
-| PUT | `/api/MedicaoVagao/{id}` | `204`, corrige os dados e recalcula a ocupação |
-| DELETE | `/api/MedicaoVagao/{id}` | `204`, exclui a leitura |
-| GET | `/api/Vagao/{id}/ultima-ocupacao` | `200`, última leitura daquele vagão |
-
-Operações por ID retornam `404` para medição inexistente. A última ocupação
-retorna `404` para vagão inexistente ou sem leitura, usa o maior `medidaEm` que
-não esteja no futuro e, em empate, o maior ID. Retorna o horário com `Z`.
-Assim como na plataforma, essa consulta expõe a última leitura registrada;
-a rota `/lotacao`, descrita abaixo, considera indisponíveis leituras com mais
-de cinco minutos e classifica a lotação. A avaliação de demanda e os alertas são descritos adiante.
-
-Vagão ou parada com medições não pode ser excluído (`409`). A exclusão do trem
-também é protegida. Trocar o trem de um vagão com medições ligadas a paradas,
-ou de uma parada com medições, retorna `409`; remova esses vínculos primeiro.
-A coleção Postman registra leituras dos três vagões e remove as medições antes
-das paradas e vagões. Os dados da coleção são simulações.
-
-## Sinalização de lotação por vagão
-
-Os endpoints abaixo transformam a ocupação direta do vagão em informação para os futuros
-visores externos. A resposta contém texto e cor; esta etapa entrega a regra
-pela API, ainda sem uma tela de visor.
-
-- `GET /api/Vagao/{id}/lotacao`: sinalização de um vagão.
-- `GET /api/Trem/{id}/lotacao`: sinalização de todos os vagões, em ordem de posição.
-
-Critérios escolhidos para a simulação acadêmica:
-
-| Ocupação em relação à capacidade | Situação | Cor |
-|---|---|---|
-| Menos de 50% | Com espaço | Verde |
-| De 50% a menos de 80% | Ocupado | Amarelo |
-| 80% ou mais | Muito cheio | Vermelho |
-| Sem leitura ou leitura com mais de 5 minutos | Lotação indisponível | Cinza |
-
-Esses limites não são normas de operação ferroviária. O percentual é calculado
-por `100 × ocupacaoEstimada / capacidadePessoas`, sem limitar o resultado a 100%.
-A classificação usa o valor calculado, sem arredondamento.
-
-A consulta usa `QuantidadePessoas` e `AtualizadoEm` do cadastro do vagão,
-atualizados pelo `PUT /api/Vagao/{id}`. A validade é de até cinco minutos.
-Quantidade ou horário ausente, horário no futuro, capacidade não positiva ou ocupação negativa
-em dados legados também resulta em indisponibilidade.
-
-Exemplo de resposta para capacidade 100 e ocupação 40:
-
-```json
-{
-  "vagaoId": 1,
-  "posicao": 1,
-  "capacidadePessoas": 100,
-  "ocupacaoEstimada": 40,
-  "percentualOcupacao": 40,
-  "medidaEm": "2026-11-17T18:00:00Z",
-  "situacao": "Com espaço",
-  "cor": "Verde"
-}
-```
-
-Sem leitura válida, a resposta continua sendo `200`, com situação
-“Lotação indisponível”, cor “Cinza”, ocupação e percentual `null`. `medidaEm`
-guarda o horário da atualização direta, mesmo quando antiga, ou `null`
-se não houver horário. Assim, ausência de informação não é confundida com vagão
-vazio. Vagão ou trem inexistente retorna `404` JSON; trem sem vagões retorna
-`200` com `[]`.
-
-Os endpoints `/ultima-ocupacao` continuam retornando medições históricas.
-Para sinalização atual, use `/lotacao`, que lê os campos diretos do vagão.
-Na resposta, `ocupacaoEstimada` corresponde a `QuantidadePessoas` e `medidaEm`
-corresponde a `AtualizadoEm`, mantendo o formato anterior da consulta.
-A classificação é feita durante a consulta e não exige nova migration além
-de `AddOcupacaoAtual`.
-
-A pasta “Sinalização de lotação” no Postman atualiza os vagões pelo CRUD e
-consulta a composição. Depois mostra “Com espaço”, envia uma quantidade `null`
-para demonstrar indisponibilidade e restaura a contagem. Execute a coleção na
-ordem completa. Se a demonstração demorar mais de cinco minutos, repita os
-`PUT` dos vagões para renovar as leituras. O horário é automático no servidor.
-
-## Avaliação da demanda e alerta operacional
-
-Aplique a migration `AddAlertasOperacionais` no seu schema de teste.
-A criação do alerta acontece pela avaliação da parada, para que a API calcule
-os números usados na decisão. Não é necessário cadastrar um alerta manualmente.
-
-`POST /api/ParadaProgramada/{id}/avaliar-demanda` recebe os desembarques
-**previstos**, informados manualmente para cada vagão no cenário simulado:
-
-```json
-{
-  "desembarquesPrevistos": [
-    { "vagaoId": 1, "quantidadePessoas": 0 },
-    { "vagaoId": 2, "quantidadePessoas": 30 },
-    { "vagaoId": 3, "quantidadePessoas": 40 }
-  ]
-}
-```
-
-Use os IDs reais dos vagões do trem da parada. Informe cada vagão exatamente uma
-vez, inclusive quando a previsão for zero. A previsão não pode ser negativa nem
-maior que a ocupação atual do vagão. Ela é diferente dos desembarques já
-registrados na medição: movimentos passados não são subtraídos novamente.
-
-No MVP, a última ocupação da plataforma é usada diretamente como demanda
-projetada para a chegada. Não há previsão de novas pessoas entrando ou saindo
-até a chegada. As medições da plataforma e de todos os vagões devem ter até
-cinco minutos, com horário passado ou atual. Sem dados completos, a avaliação
-retorna `400` JSON e não cria nem modifica alertas. Parada inexistente retorna
-`404`; parada com chegada real registrada retorna `400`.
-
-Para cada vagão:
-
-`ocupação após desembarque = ocupação estimada − desembarques previstos`
-
-`espaço disponível = máximo(0, capacidade − ocupação após desembarque)`
-
-A API soma os espaços e calcula:
-
-`pessoas que podem ficar = máximo(0, demanda projetada − capacidade disponível)`
-
-**Cenário de demonstração, identificado como simulação:**
-
-| Vagão | Capacidade | Ocupação atual | Desembarques previstos | Espaço disponível |
-|---|---:|---:|---:|---:|
-| 1 | 100 | 30 | 0 | 70 |
-| 2 | 100 | 70 | 30 | 60 |
-| 3 | 100 | 90 | 40 | 50 |
-| Total | 300 | 190 | 70 | 180 |
-
-Com 300 pessoas na plataforma e 180 lugares estimados após desembarques,
-cerca de 120 pessoas podem ficar para a próxima viagem. Ao mesmo tempo, a
-sinalização atual indica “Com espaço” no vagão 1, “Ocupado” no 2 e “Muito cheio”
-no 3. Essa comparação é uma simulação; não representa resultado de operação real.
-
-A avaliação retorna `201` e `Location` quando abre um alerta. Retorna `200` se
-não houver risco ou se já existir alerta para a parada. O corpo contém
-`paradaProgramadaId`, `avaliadoEm`, `demandaProjetada`,
-`capacidadeDisponivelEstimada`, `pessoasPodemFicar`, `alertaId` e `statusAlerta`.
-Se não houver risco nem alerta anterior, os dois últimos campos serão `null`.
-
-O índice único em `ParadaProgramadaId` garante zero ou um alerta por parada.
-O alerta guarda a demanda e a capacidade no momento da abertura. Novas avaliações
-retornam estimativas atuais, preservando os números iniciais e o status escolhido
-pelo operador. Redução da demanda não encerra o alerta automaticamente, e uma
-nova avaliação não reabre um alerta encerrado.
-
-### Acompanhamento pelo operador
-
-- `GET /api/AlertaOperacional`: lista os alertas, ou `[]` se vazio.
-- `GET /api/AlertaOperacional/{id}`: consulta os números da abertura, status e ação.
-- `PUT /api/AlertaOperacional/{id}`: altera status e ação; sucesso `204`.
-- `DELETE /api/AlertaOperacional/{id}`: exclui o alerta; sucesso `204`.
-
-Exemplo de alteração:
-
-```json
-{
-  "status": "EmAnalise",
-  "acaoOperador": "Solicitada avaliação de trem reserva"
-}
-```
-
-Os status aceitos são `Aberto`, `EmAnalise` e `Encerrado`. Para encerrar, registre
-uma ação não vazia, de até 1000 caracteres. O `PUT` substitui status e ação; para
-apenas mudar status mantendo uma ação, envie também o texto atual. Essa rota não
-permite alterar os números da abertura. Entradas inválidas retornam `400` JSON,
-e alerta inexistente retorna `404`. O operador pode reabrir explicitamente um
-alerta com `PUT`; a avaliação automática não altera seu status.
-
-A exclusão serve também para a limpeza do cenário de teste. Depois de excluir,
-outra avaliação com risco pode criar um novo alerta, mantendo no máximo um
-registro atual por parada. Uma parada com alerta não pode ser excluída nem ter
-trem ou plataforma trocados (`409`); remova o alerta antes dessas operações.
-
-A pasta “Alerta operacional” no Postman prepara o cenário 300/180, verifica as
-120 pessoas estimadas, repete a avaliação para conferir que não há duplicata,
-registra a ação e encerra o alerta. A limpeza exclui o alerta antes da parada.
-O sistema apenas apoia a avaliação pelo Centro de Controle Operacional: a
-solicitação de reforço é uma decisão humana. Não há comando automático de trem
-reserva, autenticação do operador ou painel visual nesta etapa.
-
-## Demonstração da entrega
-
-Siga [DEMONSTRACAO.md](DEMONSTRACAO.md) para o roteiro de apresentação, a coleção
-`Fluxo.demonstracao.postman_collection.json` e a comparação simulada de
-distribuição entre vagões. Essa coleção separada prepara o cenário 300/180,
-mostra a sinalização, gera o alerta, registra a ação do operador e oferece uma
-pasta de limpeza. A coleção `Fluxo.postman_collection.json` continua disponível
-para testar os CRUDs e as validações de forma mais ampla.
+O .NET implementa a API que recebe as contagens simuladas, mantém os cadastros no Oracle e disponibiliza informações de lotação e capacidade. Essas respostas podem alimentar os visores para os passageiros e uma interface de acompanhamento para a companhia. Na evolução do projeto, um módulo de visão computacional poderá fornecer as contagens que hoje são informadas manualmente.
