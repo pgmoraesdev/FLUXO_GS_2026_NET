@@ -21,9 +21,11 @@ public class VagaoController : ControllerBase
     public record VagaoInput(
         [Range(1, int.MaxValue)] int TremId,
         [Range(1, int.MaxValue)] int Posicao,
-        [Range(1, int.MaxValue)] int CapacidadePessoas);
+        [Range(1, int.MaxValue)] int CapacidadePessoas,
+        [Range(0, int.MaxValue)] int? QuantidadePessoas = null);
 
-    public record VagaoResponse(int Id, int TremId, int Posicao, int CapacidadePessoas);
+    public record VagaoResponse(int Id, int TremId, int Posicao, int CapacidadePessoas,
+        int? QuantidadePessoas, DateTime? AtualizadoEm);
 
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -32,7 +34,8 @@ public class VagaoController : ControllerBase
         var vagoes = await dbContext.Vagoes
             .AsNoTracking()
             .OrderBy(vagao => vagao.Id)
-            .Select(vagao => new VagaoResponse(vagao.Id, vagao.TremId, vagao.Posicao, vagao.CapacidadePessoas))
+            .Select(vagao => new VagaoResponse(vagao.Id, vagao.TremId, vagao.Posicao, vagao.CapacidadePessoas,
+                vagao.QuantidadePessoas, vagao.AtualizadoEm))
             .ToListAsync(cancellationToken);
 
         return Ok(vagoes);
@@ -46,7 +49,8 @@ public class VagaoController : ControllerBase
         var vagao = await dbContext.Vagoes
             .AsNoTracking()
             .Where(vagao => vagao.Id == id)
-            .Select(vagao => new VagaoResponse(vagao.Id, vagao.TremId, vagao.Posicao, vagao.CapacidadePessoas))
+            .Select(vagao => new VagaoResponse(vagao.Id, vagao.TremId, vagao.Posicao, vagao.CapacidadePessoas,
+                vagao.QuantidadePessoas, vagao.AtualizadoEm))
             .SingleOrDefaultAsync(cancellationToken);
 
         if (vagao is null)
@@ -73,7 +77,9 @@ public class VagaoController : ControllerBase
         {
             TremId = input.TremId,
             Posicao = input.Posicao,
-            CapacidadePessoas = input.CapacidadePessoas
+            CapacidadePessoas = input.CapacidadePessoas,
+            QuantidadePessoas = input.QuantidadePessoas,
+            AtualizadoEm = input.QuantidadePessoas.HasValue ? DateTime.UtcNow : null
         };
         dbContext.Vagoes.Add(vagao);
 
@@ -90,7 +96,8 @@ public class VagaoController : ControllerBase
             return Problem(statusCode: StatusCodes.Status409Conflict, detail: "Já existe um vagão nessa posição para esse trem.");
         }
 
-        return CreatedAtAction(nameof(GetById), new { id = vagao.Id }, new VagaoResponse(vagao.Id, vagao.TremId, vagao.Posicao, vagao.CapacidadePessoas));
+        return CreatedAtAction(nameof(GetById), new { id = vagao.Id }, new VagaoResponse(vagao.Id, vagao.TremId,
+            vagao.Posicao, vagao.CapacidadePessoas, vagao.QuantidadePessoas, vagao.AtualizadoEm));
     }
 
     [HttpPut("{id}")]
@@ -120,6 +127,8 @@ public class VagaoController : ControllerBase
         vagao.TremId = input.TremId;
         vagao.Posicao = input.Posicao;
         vagao.CapacidadePessoas = input.CapacidadePessoas;
+        vagao.QuantidadePessoas = input.QuantidadePessoas;
+        vagao.AtualizadoEm = input.QuantidadePessoas.HasValue ? DateTime.UtcNow : null;
 
         try
         {

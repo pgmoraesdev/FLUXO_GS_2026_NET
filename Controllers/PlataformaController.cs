@@ -21,7 +21,8 @@ public class PlataformaController : ControllerBase
     public record PlataformaInput(
         [Required, StringLength(2000)] string Nome,
         [Required, StringLength(2000)] string Sentido,
-        [Range(1, int.MaxValue)] int EstacaoId);
+        [Range(1, int.MaxValue)] int EstacaoId,
+        [Range(0, int.MaxValue)] int? QuantidadePessoas = null);
 
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -67,7 +68,9 @@ public class PlataformaController : ControllerBase
         {
             Nome = input.Nome,
             Sentido = input.Sentido,
-            EstacaoId = input.EstacaoId
+            EstacaoId = input.EstacaoId,
+            QuantidadePessoas = input.QuantidadePessoas,
+            AtualizadoEm = input.QuantidadePessoas.HasValue ? DateTime.UtcNow : null
         };
 
         dbContext.Set<Plataforma>().Add(plataforma);
@@ -96,6 +99,8 @@ public class PlataformaController : ControllerBase
         plataforma.Nome = input.Nome;
         plataforma.Sentido = input.Sentido;
         plataforma.EstacaoId = input.EstacaoId;
+        plataforma.QuantidadePessoas = input.QuantidadePessoas;
+        plataforma.AtualizadoEm = input.QuantidadePessoas.HasValue ? DateTime.UtcNow : null;
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return NoContent();

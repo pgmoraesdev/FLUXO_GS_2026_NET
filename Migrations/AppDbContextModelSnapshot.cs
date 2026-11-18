@@ -189,12 +189,18 @@ namespace Fluxo_GS_2026_2TDSPR.Migrations
 
                     OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("AtualizadoEm")
+                        .HasColumnType("TIMESTAMP(7)");
+
                     b.Property<int>("EstacaoId")
                         .HasColumnType("NUMBER(10)");
 
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasColumnType("NVARCHAR2(2000)");
+
+                    b.Property<int?>("QuantidadePessoas")
+                        .HasColumnType("NUMBER(10)");
 
                     b.Property<string>("Sentido")
                         .IsRequired()
@@ -236,10 +242,16 @@ namespace Fluxo_GS_2026_2TDSPR.Migrations
 
                     OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("AtualizadoEm")
+                        .HasColumnType("TIMESTAMP(7)");
+
                     b.Property<int>("CapacidadePessoas")
                         .HasColumnType("NUMBER(10)");
 
                     b.Property<int>("Posicao")
+                        .HasColumnType("NUMBER(10)");
+
+                    b.Property<int?>("QuantidadePessoas")
                         .HasColumnType("NUMBER(10)");
 
                     b.Property<int>("TremId")

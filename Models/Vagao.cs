@@ -15,5 +15,10 @@ public class Vagao
     [Range(1, int.MaxValue)]
     public int CapacidadePessoas { get; set; }
 
+    [Range(0, int.MaxValue)]
+    public int? QuantidadePessoas { get; set; }
+
+    public DateTime? AtualizadoEm { get; set; }
+
     public Trem? Trem { get; set; }
 }

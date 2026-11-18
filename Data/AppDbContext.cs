@@ -1,5 +1,6 @@
 using Fluxo_GS_2026_2TDSPR.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Fluxo_GS_2026_2TDSPR.Data
 {
@@ -24,6 +25,15 @@ namespace Fluxo_GS_2026_2TDSPR.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            var horarioUtc = new ValueConverter<DateTime, DateTime>(
+                valor => valor,
+                valor => DateTime.SpecifyKind(valor, DateTimeKind.Utc));
+
+            modelBuilder.Entity<Plataforma>()
+                .Property(p => p.AtualizadoEm).HasConversion(horarioUtc);
+            modelBuilder.Entity<Vagao>()
+                .Property(v => v.AtualizadoEm).HasConversion(horarioUtc);
+
             modelBuilder.Entity<Estacao>().ToTable("TBL_ESTACOES_2TDSPR");
 
             modelBuilder.Entity<Estacao>().HasKey(e => e.Id);

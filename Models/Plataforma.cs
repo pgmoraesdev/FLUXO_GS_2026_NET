@@ -10,5 +10,10 @@ public class Plataforma
 
     public string Sentido { get; set; } = string.Empty;
 
+    [System.ComponentModel.DataAnnotations.Range(0, int.MaxValue)]
+    public int? QuantidadePessoas { get; set; }
+
+    public DateTime? AtualizadoEm { get; set; }
+
     public Estacao? Estacao { get; set; }
 }
