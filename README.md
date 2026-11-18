@@ -2,6 +2,56 @@
 
 API da Global Solution 2026/2 da FIAP para um protótipo de monitoramento da lotação no transporte ferroviário. O projeto usa ASP.NET Core 8, Entity Framework Core e Oracle.
 
+## Simplificação em andamento — passos 1 e 2
+
+A entrega será demonstrada com uma estação, uma plataforma, um trem e três
+vagões. As contagens informadas pelo Postman representam os dados que câmeras
+poderiam enviar. O modelo final terá quatro entidades: `Estacao`, `Plataforma`,
+`Trem` e `Vagao`, com a ocupação mais recente guardada na própria plataforma
+e no próprio vagão.
+
+Nesta etapa, os CRUDs de plataforma e vagão já recebem o campo opcional
+`quantidadePessoas`. A API grava `atualizadoEm` automaticamente em UTC quando
+recebe uma contagem, inclusive zero. Quantidade negativa retorna `400`.
+`null` significa ocupação desconhecida e deixa o horário vazio. Registros
+anteriores à migration também começam com os dois campos vazios.
+
+Exemplos de cadastro ou substituição pelo `PUT`, usando IDs existentes:
+
+```json
+{
+  "nome": "Plataforma 1",
+  "sentido": "Terminal Norte",
+  "estacaoId": 1,
+  "quantidadePessoas": 300
+}
+```
+
+```json
+{
+  "tremId": 1,
+  "posicao": 1,
+  "capacidadePessoas": 100,
+  "quantidadePessoas": 30
+}
+```
+
+As consultas e as respostas de cadastro incluem a quantidade e o horário.
+Cada `PUT` substitui a contagem anterior. Envie todos os campos do cadastro
+e a quantidade atual; omitir `quantidadePessoas` ou enviar `null` limpa a
+contagem e o horário. Uma contagem acima da capacidade é aceita para representar
+superlotação. O horário é gerado pelo servidor, sem precisar enviá-lo no JSON.
+
+Aplique a migration `AddOcupacaoAtual` com `dotnet ef database update` antes
+de executar esta versão. Ela acrescenta quatro colunas opcionais e preserva
+as tabelas e os dados existentes.
+
+As consultas de lotação e avaliação descritas mais abaixo ainda usam as
+medições históricas. Sua adaptação para a ocupação direta, a retirada de
+paradas, medições e alertas persistidos e o roteiro final serão feitos nos
+próximos passos. A comparação simplificada usará o trem escolhido na consulta
+e seu espaço atual disponível.
+
 ## Como executar
 
 Na pasta que contém o arquivo `Fluxo_GS_2026_2TDSPR.csproj`, tenha o SDK do .NET 8 e acesso ao Oracle da FIAP. Se o comando `dotnet ef` ainda estiver indisponível, instale a ferramenta:

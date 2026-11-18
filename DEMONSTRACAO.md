@@ -1,5 +1,22 @@
 # FLUXO — roteiro de demonstração
 
+## Cenário simplificado — preparação dos passos 1 e 2
+
+O roteiro final será reduzido para uma estação, uma plataforma, um trem e três
+vagões. Nesta etapa, cadastre a estação e o trem pelas rotas existentes. Em
+`POST /api/Plataforma`, envie também `quantidadePessoas: 300`. Cadastre três
+vagões de capacidade 100, nas posições 1, 2 e 3, com `quantidadePessoas` igual
+a 30, 70 e 90, respectivamente. Use os exemplos completos do README e os IDs
+retornados pela API.
+
+Consulte os registros com `GET` para mostrar as contagens e o horário automático.
+Use `PUT` com os campos completos para substituir uma contagem, mostrar um
+vagão vazio com zero ou representar ausência de leitura com `null`.
+
+As próximas etapas adaptarão a classificação de lotação e a comparação com o
+espaço do trem para esses campos. O roteiro histórico abaixo continua usando
+as medições e paradas enquanto essa adaptação está em andamento.
+
 Todos os dados deste roteiro são **simulados**. A API não está conectada a
 câmeras, sensores ou à operação de uma linha real. O objetivo é demonstrar como
 contagens podem apoiar o passageiro e a avaliação do Centro de Controle
