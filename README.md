@@ -21,6 +21,8 @@ Este projeto é a API da solução CitizenTech desenvolvida para a Global Soluti
 
 Foi desenvolvida uma API REST em **C# com ASP.NET Core 8**, utilizando controllers, **Entity Framework Core** e persistência no **Oracle da FIAP**. As alterações do banco são versionadas por migrations.
 
+## Modelo de dados
+
 O modelo possui quatro entidades e dois relacionamentos 1:N. Uma estação possui várias plataformas e um trem possui vários vagões.
 
 | Entidade | Principais atributos |
@@ -29,6 +31,48 @@ O modelo possui quatro entidades e dois relacionamentos 1:N. Uma estação possu
 | Plataforma | Identificador, estação, nome, sentido, quantidade atual de pessoas e horário da atualização. |
 | Trem | Identificador, código, modelo e fabricante. |
 | Vagão | Identificador, trem, posição, capacidade, quantidade atual de pessoas e horário da atualização. |
+
+```mermaid
+erDiagram
+    Estacao ||--o{ Plataforma : possui
+    Trem ||--o{ Vagao : possui
+
+    Estacao {
+        int Id PK
+        string Nome
+        string Endereco
+        string Cidade
+    }
+
+    Plataforma {
+        int Id PK
+        int EstacaoId FK
+        string Nome
+        string Sentido
+        int QuantidadePessoas
+        DateTime AtualizadoEm
+    }
+
+    Trem {
+        int Id PK
+        string Codigo UK
+        string Modelo
+        string Fabricante
+    }
+
+    Vagao {
+        int Id PK
+        int TremId FK
+        int Posicao
+        int CapacidadePessoas
+        int QuantidadePessoas
+        DateTime AtualizadoEm
+    }
+```
+
+No diagrama, `PK` indica a chave primária, `FK` a chave estrangeira e `UK` um campo único. Cada plataforma pertence a exatamente uma estação, e cada vagão pertence a exatamente um trem. Uma estação pode ter zero ou várias plataformas; um trem pode ter zero ou vários vagões.
+
+`Endereco`, `Cidade`, `Modelo` e `Fabricante` são opcionais. `QuantidadePessoas` e `AtualizadoEm` também podem ser nulos na plataforma e no vagão. Além do código único do trem, a combinação de `TremId` e `Posicao` deve ser única para cada vagão.
 
 Cada atualização substitui a ocupação anterior. O protótipo guarda a contagem mais recente diretamente na plataforma e no vagão.
 
@@ -73,26 +117,11 @@ Cada atualização substitui a ocupação anterior. O protótipo guarda a contag
 
 ## Validações e regras de negócio
 
-Os nomes, o sentido da plataforma e o código do trem são obrigatórios. O nome da estação, o nome da plataforma e o sentido aceitam até 2000 caracteres. O código do trem aceita até 50 caracteres. Os novos campos são opcionais: `modelo` e `fabricante` do trem aceitam até 100 caracteres; `endereco` e `cidade` da estação aceitam até 300 e 100 caracteres, respectivamente. Eles podem ser enviados no POST e no PUT e são retornados nas consultas. No PUT, omitir esses campos limpa os valores anteriores.
-
-As entidades `Trem` e `Estacao` validam seus dados nos construtores e no método `AtualizarCadastro`. Código e nome rejeitam valores nulos, vazios ou compostos apenas por espaços; os limites de tamanho também são verificados na entidade. Os textos são aparados e os campos opcionais em branco viram `null`. Todos os campos são validados antes de alterar o cadastro. Os setters dos campos de cadastro são privados, e os controllers retornam `400 Bad Request` quando a validação falha.
-
-As entidades `Plataforma` e `Vagao` também possuem construtores validados, setters privados e `AtualizarCadastro`. A plataforma valida nome e sentido obrigatórios com até 2000 caracteres e remove espaços nas extremidades. Ambas validam os IDs de vínculo positivos; o vagão também exige posição e capacidade positivas. O método `AtualizarOcupacao` rejeita contagens negativas, registra o horário em UTC e limpa contagem e horário ao receber `null`. Uma atualização inválida preserva todos os dados anteriores. A verificação de existência da estação ou do trem e a unicidade da posição continuam nos controllers e no banco.
-
-Os IDs de vínculo, a posição do vagão e sua capacidade devem ser maiores que zero. A estação e o trem referenciados precisam existir. O código do trem e a posição de um vagão dentro do mesmo trem devem ser únicos.
-
-`quantidadePessoas` aceita zero ou um inteiro positivo. O valor `null` representa uma ocupação desconhecida. Ao receber uma contagem, a API registra `atualizadoEm` automaticamente em UTC. No `PUT`, envie todos os campos do cadastro e a contagem atual. Omitir a quantidade ou enviar `null` limpa a contagem e o horário.
-
-A lotação é calculada pela quantidade de pessoas dividida pela capacidade do vagão. As faixas e a validade de cinco minutos são escolhas da simulação acadêmica.
-
-| Ocupação | Situação | Cor |
-| --- | --- | --- |
-| Menos de 50% | Com espaço | Verde |
-| De 50% a menos de 80% | Ocupado | Amarelo |
-| 80% ou mais | Muito cheio | Vermelho |
-| Quantidade ou horário ausente, leitura antiga ou dados inválidos | Lotação indisponível | Cinza |
-
-Uma contagem acima da capacidade é aceita para representar superlotação. A comparação de capacidade soma o espaço livre de cada vagão, com mínimo de zero, e compara o total com as pessoas esperando. Ela exige leituras válidas de até cinco minutos na plataforma e em todos os vagões do trem. A escolha do trem é informada na consulta. A decisão de reforçar o serviço cabe à operadora.
+- Nomes, sentido e código são obrigatórios. IDs de vínculo, posição e capacidade devem ser positivos; a estação e o trem vinculados precisam existir.
+- O código do trem e a posição de cada vagão no mesmo trem são únicos.
+- A contagem aceita zero ou mais pessoas, inclusive superlotação. `null` limpa a contagem e o horário. No PUT, envie o cadastro completo.
+- Lotação: abaixo de 50% verde; de 50% a menos de 80% amarelo; a partir de 80% vermelho. Leituras ausentes ou com mais de cinco minutos ficam indisponíveis.
+- A avaliação compara pessoas na plataforma com lugares livres no trem e exige leituras recentes. A decisão de reforçar o serviço cabe à operadora.
 
 ## Como executar
 
