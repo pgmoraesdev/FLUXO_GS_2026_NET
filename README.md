@@ -77,6 +77,8 @@ Os nomes, o sentido da plataforma e o código do trem são obrigatórios. O nome
 
 As entidades `Trem` e `Estacao` validam seus dados nos construtores e no método `AtualizarCadastro`. Código e nome rejeitam valores nulos, vazios ou compostos apenas por espaços; os limites de tamanho também são verificados na entidade. Os textos são aparados e os campos opcionais em branco viram `null`. Todos os campos são validados antes de alterar o cadastro. Os setters dos campos de cadastro são privados, e os controllers retornam `400 Bad Request` quando a validação falha.
 
+As entidades `Plataforma` e `Vagao` também possuem construtores validados, setters privados e `AtualizarCadastro`. A plataforma valida nome e sentido obrigatórios com até 2000 caracteres e remove espaços nas extremidades. Ambas validam os IDs de vínculo positivos; o vagão também exige posição e capacidade positivas. O método `AtualizarOcupacao` rejeita contagens negativas, registra o horário em UTC e limpa contagem e horário ao receber `null`. Uma atualização inválida preserva todos os dados anteriores. A verificação de existência da estação ou do trem e a unicidade da posição continuam nos controllers e no banco.
+
 Os IDs de vínculo, a posição do vagão e sua capacidade devem ser maiores que zero. A estação e o trem referenciados precisam existir. O código do trem e a posição de um vagão dentro do mesmo trem devem ser únicos.
 
 `quantidadePessoas` aceita zero ou um inteiro positivo. O valor `null` representa uma ocupação desconhecida. Ao receber uma contagem, a API registra `atualizadoEm` automaticamente em UTC. No `PUT`, envie todos os campos do cadastro e a contagem atual. Omitir a quantidade ou enviar `null` limpa a contagem e o horário.

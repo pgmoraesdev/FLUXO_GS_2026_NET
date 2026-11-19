@@ -84,14 +84,15 @@ public class VagaoController : ControllerBase
             return Problem(statusCode: StatusCodes.Status404NotFound, detail: "Trem não encontrado.");
         }
 
-        var vagao = new Vagao
+        Vagao vagao;
+        try
         {
-            TremId = input.TremId,
-            Posicao = input.Posicao,
-            CapacidadePessoas = input.CapacidadePessoas,
-            QuantidadePessoas = input.QuantidadePessoas,
-            AtualizadoEm = input.QuantidadePessoas.HasValue ? DateTime.UtcNow : null
-        };
+            vagao = new Vagao(input.TremId, input.Posicao, input.CapacidadePessoas, input.QuantidadePessoas);
+        }
+        catch (ValidationException exception)
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest, detail: exception.Message);
+        }
         dbContext.Vagoes.Add(vagao);
 
         try
@@ -129,11 +130,14 @@ public class VagaoController : ControllerBase
             return Problem(statusCode: StatusCodes.Status404NotFound, detail: "Trem não encontrado.");
         }
 
-        vagao.TremId = input.TremId;
-        vagao.Posicao = input.Posicao;
-        vagao.CapacidadePessoas = input.CapacidadePessoas;
-        vagao.QuantidadePessoas = input.QuantidadePessoas;
-        vagao.AtualizadoEm = input.QuantidadePessoas.HasValue ? DateTime.UtcNow : null;
+        try
+        {
+            vagao.AtualizarCadastro(input.TremId, input.Posicao, input.CapacidadePessoas, input.QuantidadePessoas);
+        }
+        catch (ValidationException exception)
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest, detail: exception.Message);
+        }
 
         try
         {

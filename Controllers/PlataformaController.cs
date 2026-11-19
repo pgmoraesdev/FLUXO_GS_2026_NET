@@ -110,14 +110,15 @@ public class PlataformaController : ControllerBase
             return Problem(statusCode: StatusCodes.Status404NotFound, detail: "Estação não encontrada.");
         }
 
-        var plataforma = new Plataforma
+        Plataforma plataforma;
+        try
         {
-            Nome = input.Nome,
-            Sentido = input.Sentido,
-            EstacaoId = input.EstacaoId,
-            QuantidadePessoas = input.QuantidadePessoas,
-            AtualizadoEm = input.QuantidadePessoas.HasValue ? DateTime.UtcNow : null
-        };
+            plataforma = new Plataforma(input.Nome, input.Sentido, input.EstacaoId, input.QuantidadePessoas);
+        }
+        catch (ValidationException exception)
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest, detail: exception.Message);
+        }
 
         dbContext.Set<Plataforma>().Add(plataforma);
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -142,11 +143,14 @@ public class PlataformaController : ControllerBase
             return Problem(statusCode: StatusCodes.Status404NotFound, detail: "Estação não encontrada.");
         }
 
-        plataforma.Nome = input.Nome;
-        plataforma.Sentido = input.Sentido;
-        plataforma.EstacaoId = input.EstacaoId;
-        plataforma.QuantidadePessoas = input.QuantidadePessoas;
-        plataforma.AtualizadoEm = input.QuantidadePessoas.HasValue ? DateTime.UtcNow : null;
+        try
+        {
+            plataforma.AtualizarCadastro(input.Nome, input.Sentido, input.EstacaoId, input.QuantidadePessoas);
+        }
+        catch (ValidationException exception)
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest, detail: exception.Message);
+        }
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return NoContent();
