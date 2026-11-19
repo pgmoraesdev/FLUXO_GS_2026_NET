@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Fluxo_GS_2026_2TDSPR.Data;
 using Fluxo_GS_2026_2TDSPR.Models;
+using Fluxo_GS_2026_2TDSPR.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

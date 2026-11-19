@@ -1,4 +1,6 @@
-namespace Fluxo_GS_2026_2TDSPR.Models;
+using Fluxo_GS_2026_2TDSPR.Models;
+
+namespace Fluxo_GS_2026_2TDSPR.DTOs;
 
 // Resposta de consulta, sem tabela no banco. As faixas são da simulação acadêmica.
 public record LotacaoResponse(int VagaoId, int Posicao, int CapacidadePessoas,
