@@ -12,6 +12,7 @@ namespace Fluxo_GS_2026_2TDSPR.Data
         }
 
         public DbSet<Estacao> Estacoes { get; set; }
+        public DbSet<Plataforma> Plataformas { get; set; }
         public DbSet<Trem> Trens { get; set; }
         public DbSet<Vagao> Vagoes { get; set; }
 
@@ -20,6 +21,9 @@ namespace Fluxo_GS_2026_2TDSPR.Data
             var horarioUtc = new ValueConverter<DateTime, DateTime>(
                 valor => valor,
                 valor => DateTime.SpecifyKind(valor, DateTimeKind.Utc));
+
+            modelBuilder.Entity<Plataforma>()
+                .ToTable("Plataforma");
 
             modelBuilder.Entity<Plataforma>()
                 .Property(p => p.AtualizadoEm).HasConversion(horarioUtc);

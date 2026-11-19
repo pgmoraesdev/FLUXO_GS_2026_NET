@@ -19,10 +19,6 @@ public class TremController : ControllerBase
         this.dbContext = dbContext;
     }
 
-    public record TremInput([Required, StringLength(50)] string Codigo, [StringLength(100)] string? Modelo = null, [StringLength(100)] string? Fabricante = null);
-
-    public record TremResponse(int Id, string Codigo, string? Modelo, string? Fabricante);
-
     [HttpGet("{id}/lotacao")]
     public async Task<ActionResult<List<LotacaoResponse>>> GetLotacao(int id, CancellationToken cancellationToken)
     {

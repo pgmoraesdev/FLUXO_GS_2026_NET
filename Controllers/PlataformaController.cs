@@ -18,16 +18,6 @@ public class PlataformaController : ControllerBase
         this.dbContext = dbContext;
     }
 
-    public record PlataformaInput(
-        [Required, StringLength(2000)] string Nome,
-        [Required, StringLength(2000)] string Sentido,
-        [Range(1, int.MaxValue)] int EstacaoId,
-        [Range(0, int.MaxValue)] int? QuantidadePessoas = null);
-
-    public record AvaliacaoCapacidadeResponse(int PlataformaId, int TremId, DateTime AvaliadoEm,
-        int QuantidadePessoas, long CapacidadeDisponivel, long PessoasSemEspaco,
-        bool AvaliarReforco, string Mensagem);
-
     [HttpGet("{id}/avaliar-capacidade")]
     public async Task<ActionResult<AvaliacaoCapacidadeResponse>> AvaliarCapacidade(int id,
         [FromQuery] int tremId, CancellationToken cancellationToken)
@@ -35,7 +25,7 @@ public class PlataformaController : ControllerBase
         if (tremId <= 0)
             return Problem(statusCode: 400, detail: "Informe um tremId maior que zero.");
 
-        var plataforma = await dbContext.Set<Plataforma>().AsNoTracking()
+        var plataforma = await dbContext.Plataformas.AsNoTracking()
             .SingleOrDefaultAsync(p => p.Id == id, cancellationToken);
         if (plataforma is null)
             return Problem(statusCode: 404, detail: "Plataforma não encontrada.");
@@ -75,7 +65,7 @@ public class PlataformaController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<List<Plataforma>>> GetAll(CancellationToken cancellationToken)
     {
-        var plataformas = await dbContext.Set<Plataforma>()
+        var plataformas = await dbContext.Plataformas
             .AsNoTracking()
             .OrderBy(plataforma => plataforma.Id)
             .ToListAsync(cancellationToken);
@@ -88,7 +78,7 @@ public class PlataformaController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Plataforma>> GetById(int id, CancellationToken cancellationToken)
     {
-        var plataforma = await dbContext.Set<Plataforma>()
+        var plataforma = await dbContext.Plataformas
             .AsNoTracking()
             .SingleOrDefaultAsync(plataforma => plataforma.Id == id, cancellationToken);
 
@@ -121,7 +111,7 @@ public class PlataformaController : ControllerBase
             return Problem(statusCode: StatusCodes.Status400BadRequest, detail: exception.Message);
         }
 
-        dbContext.Set<Plataforma>().Add(plataforma);
+        dbContext.Plataformas.Add(plataforma);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return CreatedAtAction(nameof(GetById), new { id = plataforma.Id }, plataforma);
@@ -133,7 +123,7 @@ public class PlataformaController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(int id, PlataformaInput input, CancellationToken cancellationToken)
     {
-        var plataforma = await dbContext.Set<Plataforma>().FindAsync(new object[] { id }, cancellationToken);
+        var plataforma = await dbContext.Plataformas.FindAsync(new object[] { id }, cancellationToken);
         if (plataforma is null)
         {
             return Problem(statusCode: StatusCodes.Status404NotFound, detail: "Plataforma não encontrada.");
@@ -162,13 +152,13 @@ public class PlataformaController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
-        var plataforma = await dbContext.Set<Plataforma>().FindAsync(new object[] { id }, cancellationToken);
+        var plataforma = await dbContext.Plataformas.FindAsync(new object[] { id }, cancellationToken);
         if (plataforma is null)
         {
             return Problem(statusCode: StatusCodes.Status404NotFound, detail: "Plataforma não encontrada.");
         }
 
-        dbContext.Set<Plataforma>().Remove(plataforma);
+        dbContext.Plataformas.Remove(plataforma);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return NoContent();

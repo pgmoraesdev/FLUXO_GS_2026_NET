@@ -19,15 +19,6 @@ public class VagaoController : ControllerBase
         this.dbContext = dbContext;
     }
 
-    public record VagaoInput(
-        [Range(1, int.MaxValue)] int TremId,
-        [Range(1, int.MaxValue)] int Posicao,
-        [Range(1, int.MaxValue)] int CapacidadePessoas,
-        [Range(0, int.MaxValue)] int? QuantidadePessoas = null);
-
-    public record VagaoResponse(int Id, int TremId, int Posicao, int CapacidadePessoas,
-        int? QuantidadePessoas, DateTime? AtualizadoEm);
-
     [HttpGet("{id}/lotacao")]
     public async Task<ActionResult<LotacaoResponse>> GetLotacao(int id, CancellationToken cancellationToken)
     {

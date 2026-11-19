@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Fluxo_GS_2026_2TDSPR.Data;
+using Fluxo_GS_2026_2TDSPR.DTOs;
 using Fluxo_GS_2026_2TDSPR.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,10 +17,6 @@ public class EstacaoController : ControllerBase
     {
         this.dbContext = dbContext;
     }
-
-    public record EstacaoInput([Required, StringLength(2000)] string Nome, [StringLength(300)] string? Endereco = null, [StringLength(100)] string? Cidade = null);
-
-    public record EstacaoResponse(int Id, string Nome, string? Endereco, string? Cidade);
 
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]

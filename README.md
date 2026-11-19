@@ -92,6 +92,14 @@ Cada atualização substitui a ocupação anterior. O protótipo guarda a contag
 │   ├── Trem.cs
 │   └── Vagao.cs
 ├── DTOs/
+│   ├── EstacaoInput.cs
+│   ├── EstacaoResponse.cs
+│   ├── PlataformaInput.cs
+│   ├── AvaliacaoCapacidadeResponse.cs
+│   ├── TremInput.cs
+│   ├── TremResponse.cs
+│   ├── VagaoInput.cs
+│   ├── VagaoResponse.cs
 │   └── LotacaoResponse.cs
 ├── Migrations/
 ├── Program.cs
@@ -102,7 +110,7 @@ Cada atualização substitui a ocupação anterior. O protótipo guarda a contag
 ```
 
 - **Models** representa as entidades persistidas no banco.
-- **DTOs** organiza os dados de resposta da API. `LotacaoResponse` reúne a lotação e sua classificação.
+- **DTOs** organiza os dados de entrada e resposta da API, incluindo as validações dos campos recebidos. `LotacaoResponse` reúne a lotação e sua classificação.
 - **Controllers** recebe as requisições, valida os dados e executa os cadastros e as consultas.
 - **Data** configura o contexto e os relacionamentos usados pelo Entity Framework Core.
 - **Migrations** registra as alterações na estrutura do Oracle.
