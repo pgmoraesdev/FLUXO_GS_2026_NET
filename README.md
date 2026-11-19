@@ -75,6 +75,8 @@ Cada atualização substitui a ocupação anterior. O protótipo guarda a contag
 
 Os nomes, o sentido da plataforma e o código do trem são obrigatórios. O nome da estação, o nome da plataforma e o sentido aceitam até 2000 caracteres. O código do trem aceita até 50 caracteres. Os novos campos são opcionais: `modelo` e `fabricante` do trem aceitam até 100 caracteres; `endereco` e `cidade` da estação aceitam até 300 e 100 caracteres, respectivamente. Eles podem ser enviados no POST e no PUT e são retornados nas consultas. No PUT, omitir esses campos limpa os valores anteriores.
 
+As entidades `Trem` e `Estacao` validam seus dados nos construtores e no método `AtualizarCadastro`. Código e nome rejeitam valores nulos, vazios ou compostos apenas por espaços; os limites de tamanho também são verificados na entidade. Os textos são aparados e os campos opcionais em branco viram `null`. Todos os campos são validados antes de alterar o cadastro. Os setters dos campos de cadastro são privados, e os controllers retornam `400 Bad Request` quando a validação falha.
+
 Os IDs de vínculo, a posição do vagão e sua capacidade devem ser maiores que zero. A estação e o trem referenciados precisam existir. O código do trem e a posição de um vagão dentro do mesmo trem devem ser únicos.
 
 `quantidadePessoas` aceita zero ou um inteiro positivo. O valor `null` representa uma ocupação desconhecida. Ao receber uma contagem, a API registra `atualizadoEm` automaticamente em UTC. No `PUT`, envie todos os campos do cadastro e a contagem atual. Omitir a quantidade ou enviar `null` limpa a contagem e o horário.

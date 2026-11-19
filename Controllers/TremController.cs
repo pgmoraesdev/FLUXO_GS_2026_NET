@@ -73,7 +73,15 @@ public class TremController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<TremResponse>> Create(TremInput input, CancellationToken cancellationToken)
     {
-        var trem = new Trem { Codigo = input.Codigo.Trim(), Modelo = input.Modelo?.Trim(), Fabricante = input.Fabricante?.Trim() };
+        Trem trem;
+        try
+        {
+            trem = new Trem(input.Codigo, input.Modelo, input.Fabricante);
+        }
+        catch (ValidationException exception)
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest, detail: exception.Message);
+        }
         dbContext.Trens.Add(trem);
 
         try
@@ -101,9 +109,14 @@ public class TremController : ControllerBase
             return Problem(statusCode: StatusCodes.Status404NotFound, detail: "Trem não encontrado.");
         }
 
-        trem.Codigo = input.Codigo.Trim();
-        trem.Modelo = input.Modelo?.Trim();
-        trem.Fabricante = input.Fabricante?.Trim();
+        try
+        {
+            trem.AtualizarCadastro(input.Codigo, input.Modelo, input.Fabricante);
+        }
+        catch (ValidationException exception)
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest, detail: exception.Message);
+        }
 
         try
         {

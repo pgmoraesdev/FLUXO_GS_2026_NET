@@ -58,7 +58,15 @@ public class EstacaoController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<EstacaoResponse>> Create(EstacaoInput input, CancellationToken cancellationToken)
     {
-        var estacao = new Estacao { Nome = input.Nome.Trim(), Endereco = input.Endereco?.Trim(), Cidade = input.Cidade?.Trim() };
+        Estacao estacao;
+        try
+        {
+            estacao = new Estacao(input.Nome, input.Endereco, input.Cidade);
+        }
+        catch (ValidationException exception)
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest, detail: exception.Message);
+        }
         dbContext.Estacoes.Add(estacao);
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -78,9 +86,14 @@ public class EstacaoController : ControllerBase
             return Problem(statusCode: StatusCodes.Status404NotFound, detail: "Estação não encontrada.");
         }
 
-        estacao.Nome = input.Nome.Trim();
-        estacao.Endereco = input.Endereco?.Trim();
-        estacao.Cidade = input.Cidade?.Trim();
+        try
+        {
+            estacao.AtualizarCadastro(input.Nome, input.Endereco, input.Cidade);
+        }
+        catch (ValidationException exception)
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest, detail: exception.Message);
+        }
 
         try
         {
