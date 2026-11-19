@@ -25,9 +25,9 @@ O modelo possui quatro entidades e dois relacionamentos 1:N. Uma estação possu
 
 | Entidade | Principais atributos |
 | --- | --- |
-| Estação | Identificador e nome. |
+| Estação | Identificador, nome, endereço e cidade. |
 | Plataforma | Identificador, estação, nome, sentido, quantidade atual de pessoas e horário da atualização. |
-| Trem | Identificador e código. |
+| Trem | Identificador, código, modelo e fabricante. |
 | Vagão | Identificador, trem, posição, capacidade, quantidade atual de pessoas e horário da atualização. |
 
 Cada atualização substitui a ocupação anterior. O protótipo guarda a contagem mais recente diretamente na plataforma e no vagão.
@@ -73,7 +73,7 @@ Cada atualização substitui a ocupação anterior. O protótipo guarda a contag
 
 ## Validações e regras de negócio
 
-Os nomes, o sentido da plataforma e o código do trem são obrigatórios. O nome da estação, o nome da plataforma e o sentido aceitam até 2000 caracteres. O código do trem aceita até 50 caracteres.
+Os nomes, o sentido da plataforma e o código do trem são obrigatórios. O nome da estação, o nome da plataforma e o sentido aceitam até 2000 caracteres. O código do trem aceita até 50 caracteres. Os novos campos são opcionais: `modelo` e `fabricante` do trem aceitam até 100 caracteres; `endereco` e `cidade` da estação aceitam até 300 e 100 caracteres, respectivamente. Eles podem ser enviados no POST e no PUT e são retornados nas consultas. No PUT, omitir esses campos limpa os valores anteriores.
 
 Os IDs de vínculo, a posição do vagão e sua capacidade devem ser maiores que zero. A estação e o trem referenciados precisam existir. O código do trem e a posição de um vagão dentro do mesmo trem devem ser únicos.
 

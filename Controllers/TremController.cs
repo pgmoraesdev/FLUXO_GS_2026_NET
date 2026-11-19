@@ -18,9 +18,9 @@ public class TremController : ControllerBase
         this.dbContext = dbContext;
     }
 
-    public record TremInput([Required, StringLength(50)] string Codigo);
+    public record TremInput([Required, StringLength(50)] string Codigo, [StringLength(100)] string? Modelo = null, [StringLength(100)] string? Fabricante = null);
 
-    public record TremResponse(int Id, string Codigo);
+    public record TremResponse(int Id, string Codigo, string? Modelo, string? Fabricante);
 
     [HttpGet("{id}/lotacao")]
     public async Task<ActionResult<List<LotacaoResponse>>> GetLotacao(int id, CancellationToken cancellationToken)
@@ -42,7 +42,7 @@ public class TremController : ControllerBase
         var trens = await dbContext.Trens
             .AsNoTracking()
             .OrderBy(trem => trem.Id)
-            .Select(trem => new TremResponse(trem.Id, trem.Codigo))
+            .Select(trem => new TremResponse(trem.Id, trem.Codigo, trem.Modelo, trem.Fabricante))
             .ToListAsync(cancellationToken);
 
         return Ok(trens);
@@ -56,7 +56,7 @@ public class TremController : ControllerBase
         var trem = await dbContext.Trens
             .AsNoTracking()
             .Where(trem => trem.Id == id)
-            .Select(trem => new TremResponse(trem.Id, trem.Codigo))
+            .Select(trem => new TremResponse(trem.Id, trem.Codigo, trem.Modelo, trem.Fabricante))
             .SingleOrDefaultAsync(cancellationToken);
 
         if (trem is null)
@@ -73,7 +73,7 @@ public class TremController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<TremResponse>> Create(TremInput input, CancellationToken cancellationToken)
     {
-        var trem = new Trem { Codigo = input.Codigo.Trim() };
+        var trem = new Trem { Codigo = input.Codigo.Trim(), Modelo = input.Modelo?.Trim(), Fabricante = input.Fabricante?.Trim() };
         dbContext.Trens.Add(trem);
 
         try
@@ -85,7 +85,7 @@ public class TremController : ControllerBase
             return Problem(statusCode: StatusCodes.Status409Conflict, detail: "Já existe um trem com esse código.");
         }
 
-        return CreatedAtAction(nameof(GetById), new { id = trem.Id }, new TremResponse(trem.Id, trem.Codigo));
+        return CreatedAtAction(nameof(GetById), new { id = trem.Id }, new TremResponse(trem.Id, trem.Codigo, trem.Modelo, trem.Fabricante));
     }
 
     [HttpPut("{id}")]
@@ -102,6 +102,8 @@ public class TremController : ControllerBase
         }
 
         trem.Codigo = input.Codigo.Trim();
+        trem.Modelo = input.Modelo?.Trim();
+        trem.Fabricante = input.Fabricante?.Trim();
 
         try
         {

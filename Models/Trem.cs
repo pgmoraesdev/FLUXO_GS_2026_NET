@@ -9,5 +9,11 @@ public class Trem
     [Required]
     public string Codigo { get; set; } = string.Empty;
 
+    [StringLength(100)]
+    public string? Modelo { get; set; }
+
+    [StringLength(100)]
+    public string? Fabricante { get; set; }
+
     public ICollection<Vagao> Vagoes { get; set; } = new List<Vagao>();
 }

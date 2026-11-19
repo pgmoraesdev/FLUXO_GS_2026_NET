@@ -17,9 +17,9 @@ public class EstacaoController : ControllerBase
         this.dbContext = dbContext;
     }
 
-    public record EstacaoInput([Required, StringLength(2000)] string Nome);
+    public record EstacaoInput([Required, StringLength(2000)] string Nome, [StringLength(300)] string? Endereco = null, [StringLength(100)] string? Cidade = null);
 
-    public record EstacaoResponse(int Id, string Nome);
+    public record EstacaoResponse(int Id, string Nome, string? Endereco, string? Cidade);
 
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -28,7 +28,7 @@ public class EstacaoController : ControllerBase
         var estacoes = await dbContext.Estacoes
             .AsNoTracking()
             .OrderBy(estacao => estacao.Id)
-            .Select(estacao => new EstacaoResponse(estacao.Id, estacao.Nome))
+            .Select(estacao => new EstacaoResponse(estacao.Id, estacao.Nome, estacao.Endereco, estacao.Cidade))
             .ToListAsync(cancellationToken);
 
         return Ok(estacoes);
@@ -42,7 +42,7 @@ public class EstacaoController : ControllerBase
         var estacao = await dbContext.Estacoes
             .AsNoTracking()
             .Where(estacao => estacao.Id == id)
-            .Select(estacao => new EstacaoResponse(estacao.Id, estacao.Nome))
+            .Select(estacao => new EstacaoResponse(estacao.Id, estacao.Nome, estacao.Endereco, estacao.Cidade))
             .SingleOrDefaultAsync(cancellationToken);
 
         if (estacao is null)
@@ -58,12 +58,12 @@ public class EstacaoController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<EstacaoResponse>> Create(EstacaoInput input, CancellationToken cancellationToken)
     {
-        var estacao = new Estacao { Nome = input.Nome.Trim() };
+        var estacao = new Estacao { Nome = input.Nome.Trim(), Endereco = input.Endereco?.Trim(), Cidade = input.Cidade?.Trim() };
         dbContext.Estacoes.Add(estacao);
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return CreatedAtAction(nameof(GetById), new { id = estacao.Id }, new EstacaoResponse(estacao.Id, estacao.Nome));
+        return CreatedAtAction(nameof(GetById), new { id = estacao.Id }, new EstacaoResponse(estacao.Id, estacao.Nome, estacao.Endereco, estacao.Cidade));
     }
 
     [HttpPut("{id}")]
@@ -79,6 +79,8 @@ public class EstacaoController : ControllerBase
         }
 
         estacao.Nome = input.Nome.Trim();
+        estacao.Endereco = input.Endereco?.Trim();
+        estacao.Cidade = input.Cidade?.Trim();
 
         try
         {
