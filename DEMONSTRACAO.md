@@ -2,7 +2,7 @@
 
 ## Preparação
 
-Configure a conexão Oracle e aplique as migrations conforme o README. A migration `RemoveEntidadesHistoricas` remove as quatro tabelas antigas de medições, paradas e alertas, com seus registros. Confira o schema antes de executá-la.
+Configure a conexão Oracle para um schema de desenvolvimento vazio e aplique a migration `InitialCreate` conforme o README. Ela cria as quatro entidades atuais. Se o schema recebeu o histórico antigo, prepare-o conforme as instruções do README antes de executar a nova migration.
 
 Inicie a API na pasta do projeto.
 

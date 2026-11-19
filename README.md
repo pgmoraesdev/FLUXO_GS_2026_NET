@@ -124,7 +124,9 @@ dotnet restore
 dotnet build
 ```
 
-5. Confira o schema configurado e aplique as migrations. A migration `RemoveEntidadesHistoricas` apaga as quatro tabelas antigas de medições, paradas e alertas, incluindo seus registros. As tabelas de estação, plataforma, trem e vagão são preservadas.
+5. Configure um schema de desenvolvimento vazio e aplique a migration inicial. O histórico foi consolidado em `InitialCreate`, que cria somente estação, plataforma, trem e vagão, incluindo os campos de cadastro e ocupação atuais.
+
+Se o schema já recebeu as migrations antigas, ele precisa ser preparado antes: use outro schema vazio ou remova as tabelas deste projeto e seu histórico em `__EFMigrationsHistory`, perdendo os respectivos dados. A nova migration não faz a atualização do histórico anterior. Preserve tabelas de outros projetos que compartilhem o mesmo schema.
 
 ```powershell
 dotnet ef database update
@@ -169,7 +171,7 @@ Para apresentar o projeto, use a coleção menor `Fluxo.demonstracao.postman_col
 
 ## Persistência dos dados
 
-Os cadastros e as contagens atuais são gravados no Oracle pelo Entity Framework Core. As migrations existentes mantêm o histórico das alterações do banco até o modelo atual.
+Os cadastros e as contagens atuais são gravados no Oracle pelo Entity Framework Core. A migration `InitialCreate` representa a estrutura atual completa. Novas alterações no modelo devem gerar novas migrations; o snapshot deve permanecer versionado junto delas.
 
 Para verificar a persistência, cadastre uma estação, copie seu ID e encerre a API. Inicie a API novamente com a mesma conexão e consulte `GET /api/Estacao/{id}`. O registro deverá continuar disponível. Faça essa verificação antes de executar a limpeza do Postman.
 

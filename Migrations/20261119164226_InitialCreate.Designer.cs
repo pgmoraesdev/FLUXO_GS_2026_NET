@@ -12,8 +12,8 @@ using Oracle.EntityFrameworkCore.Metadata;
 namespace Fluxo_GS_2026_2TDSPR.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20261118023213_RemoveEntidadesHistoricas")]
-    partial class RemoveEntidadesHistoricas
+    [Migration("20261119164226_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -32,6 +32,14 @@ namespace Fluxo_GS_2026_2TDSPR.Migrations
                         .HasColumnType("NUMBER(10)");
 
                     OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Cidade")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)");
+
+                    b.Property<string>("Endereco")
+                        .HasMaxLength(300)
+                        .HasColumnType("NVARCHAR2(300)");
 
                     b.Property<string>("Nome")
                         .IsRequired()
@@ -87,6 +95,14 @@ namespace Fluxo_GS_2026_2TDSPR.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("NVARCHAR2(50)");
+
+                    b.Property<string>("Fabricante")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)");
+
+                    b.Property<string>("Modelo")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)");
 
                     b.HasKey("Id");
 
