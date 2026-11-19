@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Fluxo API | CRUD de teste",
-    "description": "Inicie a API e ajuste baseUrl nas variáveis da coleção se a porta for diferente. Execute a coleção na ordem exibida para cadastrar, consultar, atualizar e excluir registros de teste. A plataforma usa o ID da estação criada na primeira pasta. A exclusão da estação fica na última pasta para preservar esse vínculo até o fim do teste. A pasta Vagões cadastra uma composição com três vagões, verifica validação e conflito de posição e remove os vagões antes da limpeza do trem.",
+    "description": "Inicie a API e ajuste baseUrl nas variáveis da coleção se a porta for diferente. Execute a coleção na ordem exibida para cadastrar, consultar, atualizar e excluir registros de teste. A plataforma usa o ID da estação criada na primeira pasta. A exclusão da estação fica na última pasta para preservar esse vínculo até o fim do teste. A pasta Vagões cadastra uma composição com três vagões, verifica validação e conflito de posição e remove os vagões antes da limpeza do trem.\nInclui endereço e cidade da estação, modelo e fabricante do trem, conferência dos campos persistidos e validação dos limites de tamanho no POST e no PUT.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -72,7 +72,10 @@
                   "        pm.collectionVariables.set(\"estacaoId\", String(id));",
                   "    });",
                   "}",
-                  "if (pm.response.code === 201) { pm.test(\"Resposta contém somente id e nome\", () => pm.expect(Object.keys(pm.response.json()).sort()).to.eql([\"id\", \"nome\"])); }"
+                  "if (pm.response.code === 201) {",
+                  "    pm.test(\"Campos atuais da resposta\", () => pm.expect(Object.keys(pm.response.json()).sort()).to.eql([\"cidade\", \"endereco\", \"id\", \"nome\"]));",
+                  "    pm.test(\"Campos opcionais persistidos\", () => { const r = pm.response.json(); pm.expect(r.endereco).to.eql(\"Rua Exemplo, 100\"); pm.expect(r.cidade).to.eql(\"São Paulo\"); });",
+                  "}"
                 ]
               }
             }
@@ -97,7 +100,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"Estação de teste {{$guid}}\"\n}",
+              "raw": "{\n  \"nome\": \"Estação de teste {{$guid}}\",\n  \"endereco\": \"Rua Exemplo, 100\",\n  \"cidade\": \"São Paulo\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -116,7 +119,8 @@
                 "exec": [
                   "pm.test(\"HTTP 200\", function () {",
                   "    pm.response.to.have.status(200);",
-                  "});"
+                  "});",
+                  "if (pm.response.code === 200) { pm.test(\"Campos atuais dos registros\", () => pm.response.json().forEach(r => pm.expect(Object.keys(r).sort()).to.eql([\"cidade\", \"endereco\", \"id\", \"nome\"]))); }"
                 ]
               }
             }
@@ -158,7 +162,11 @@
                 "exec": [
                   "pm.test(\"HTTP 200\", function () {",
                   "    pm.response.to.have.status(200);",
-                  "});"
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test(\"Campos atuais da resposta\", () => pm.expect(Object.keys(pm.response.json()).sort()).to.eql([\"cidade\", \"endereco\", \"id\", \"nome\"]));",
+                  "    pm.test(\"Campos opcionais persistidos\", () => { const r = pm.response.json(); pm.expect(r.endereco).to.eql(\"Rua Exemplo, 100\"); pm.expect(r.cidade).to.eql(\"São Paulo\"); });",
+                  "}"
                 ]
               }
             }
@@ -227,12 +235,59 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"Estação de teste atualizada\"\n}",
+              "raw": "{\n  \"nome\": \"Estação de teste atualizada\",\n  \"endereco\": \"Rua Atualizada, 200\",\n  \"cidade\": \"Santo André\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
+            }
+          }
+        },
+        {
+          "name": "Conferir atualização dos campos opcionais",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"estacaoId\") || \"\"))) {",
+                  "    console.warn(\"Execute primeiro o cadastro que preenche estacaoId.\");",
+                  "    pm.execution.skipRequest();",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test(\"Campos atuais da resposta\", () => pm.expect(Object.keys(pm.response.json()).sort()).to.eql([\"cidade\", \"endereco\", \"id\", \"nome\"]));",
+                  "    pm.test(\"Campos opcionais persistidos\", () => { const r = pm.response.json(); pm.expect(r.endereco).to.eql(\"Rua Atualizada, 200\"); pm.expect(r.cidade).to.eql(\"Santo André\"); });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Estacao/{{estacaoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Estacao",
+                "{{estacaoId}}"
+              ]
             }
           }
         },
@@ -730,6 +785,202 @@
               }
             }
           }
+        },
+        {
+          "name": "POST: rejeitar endereço acima de 300 caracteres",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erro em JSON\", () => pm.expect((pm.response.headers.get(\"Content-Type\") || \"\").includes(\"json\")).to.eql(true));",
+                  "if (pm.response.code === 400) { pm.test(\"Validação do campo Endereco\", () => pm.expect(pm.response.json().errors).to.have.property(\"Endereco\")); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/Estacao",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Estacao"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Estação de teste {{$guid}}\",\n  \"endereco\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\n  \"cidade\": \"São Paulo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST: rejeitar cidade acima de 100 caracteres",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erro em JSON\", () => pm.expect((pm.response.headers.get(\"Content-Type\") || \"\").includes(\"json\")).to.eql(true));",
+                  "if (pm.response.code === 400) { pm.test(\"Validação do campo Cidade\", () => pm.expect(pm.response.json().errors).to.have.property(\"Cidade\")); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/Estacao",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Estacao"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Estação de teste {{$guid}}\",\n  \"endereco\": \"Rua Exemplo, 100\",\n  \"cidade\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PUT: rejeitar endereço acima de 300 caracteres",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"estacaoId\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erro em JSON\", () => pm.expect((pm.response.headers.get(\"Content-Type\") || \"\").includes(\"json\")).to.eql(true));",
+                  "if (pm.response.code === 400) { pm.test(\"Validação do campo Endereco\", () => pm.expect(pm.response.json().errors).to.have.property(\"Endereco\")); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/Estacao/{{estacaoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Estacao",
+                "{{estacaoId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Estação de teste atualizada\",\n  \"endereco\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\n  \"cidade\": \"Santo André\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PUT: rejeitar cidade acima de 100 caracteres",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"estacaoId\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erro em JSON\", () => pm.expect((pm.response.headers.get(\"Content-Type\") || \"\").includes(\"json\")).to.eql(true));",
+                  "if (pm.response.code === 400) { pm.test(\"Validação do campo Cidade\", () => pm.expect(pm.response.json().errors).to.have.property(\"Cidade\")); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/Estacao/{{estacaoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Estacao",
+                "{{estacaoId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Estação de teste atualizada\",\n  \"endereco\": \"Rua Atualizada, 200\",\n  \"cidade\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
         }
       ]
     },
@@ -965,6 +1216,10 @@
                   "        pm.expect(Number.isInteger(id) && id > 0).to.eql(true);",
                   "        pm.collectionVariables.set(\"tremId\", String(id));",
                   "    });",
+                  "}",
+                  "if (pm.response.code === 201) {",
+                  "    pm.test(\"Campos atuais da resposta\", () => pm.expect(Object.keys(pm.response.json()).sort()).to.eql([\"codigo\", \"fabricante\", \"id\", \"modelo\"]));",
+                  "    pm.test(\"Campos opcionais persistidos\", () => { const r = pm.response.json(); pm.expect(r.modelo).to.eql(\"Modelo de teste\"); pm.expect(r.fabricante).to.eql(\"Fabricante de teste\"); });",
                   "}"
                 ]
               }
@@ -990,7 +1245,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"codigo\": \"TREM-{{$guid}}\"\n}",
+              "raw": "{\n  \"codigo\": \"TREM-{{$guid}}\",\n  \"modelo\": \"Modelo de teste\",\n  \"fabricante\": \"Fabricante de teste\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1009,7 +1264,8 @@
                 "exec": [
                   "pm.test(\"HTTP 200\", function () {",
                   "    pm.response.to.have.status(200);",
-                  "});"
+                  "});",
+                  "if (pm.response.code === 200) { pm.test(\"Campos atuais dos registros\", () => pm.response.json().forEach(r => pm.expect(Object.keys(r).sort()).to.eql([\"codigo\", \"fabricante\", \"id\", \"modelo\"]))); }"
                 ]
               }
             }
@@ -1051,7 +1307,11 @@
                 "exec": [
                   "pm.test(\"HTTP 200\", function () {",
                   "    pm.response.to.have.status(200);",
-                  "});"
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test(\"Campos atuais da resposta\", () => pm.expect(Object.keys(pm.response.json()).sort()).to.eql([\"codigo\", \"fabricante\", \"id\", \"modelo\"]));",
+                  "    pm.test(\"Campos opcionais persistidos\", () => { const r = pm.response.json(); pm.expect(r.modelo).to.eql(\"Modelo de teste\"); pm.expect(r.fabricante).to.eql(\"Fabricante de teste\"); });",
+                  "}"
                 ]
               }
             }
@@ -1120,7 +1380,250 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"codigo\": \"TREM-EDIT-{{$guid}}\"\n}",
+              "raw": "{\n  \"codigo\": \"TREM-EDIT-{{$guid}}\",\n  \"modelo\": \"Modelo atualizado\",\n  \"fabricante\": \"Fabricante atualizado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Conferir atualização dos campos opcionais",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"tremId\") || \"\"))) {",
+                  "    console.warn(\"Execute primeiro o cadastro que preenche tremId.\");",
+                  "    pm.execution.skipRequest();",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test(\"Campos atuais da resposta\", () => pm.expect(Object.keys(pm.response.json()).sort()).to.eql([\"codigo\", \"fabricante\", \"id\", \"modelo\"]));",
+                  "    pm.test(\"Campos opcionais persistidos\", () => { const r = pm.response.json(); pm.expect(r.modelo).to.eql(\"Modelo atualizado\"); pm.expect(r.fabricante).to.eql(\"Fabricante atualizado\"); });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Trem/{{tremId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Trem",
+                "{{tremId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST: rejeitar modelo acima de 100 caracteres",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erro em JSON\", () => pm.expect((pm.response.headers.get(\"Content-Type\") || \"\").includes(\"json\")).to.eql(true));",
+                  "if (pm.response.code === 400) { pm.test(\"Validação do campo Modelo\", () => pm.expect(pm.response.json().errors).to.have.property(\"Modelo\")); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/Trem",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Trem"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"TREM-{{$guid}}\",\n  \"modelo\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\n  \"fabricante\": \"Fabricante de teste\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST: rejeitar fabricante acima de 100 caracteres",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erro em JSON\", () => pm.expect((pm.response.headers.get(\"Content-Type\") || \"\").includes(\"json\")).to.eql(true));",
+                  "if (pm.response.code === 400) { pm.test(\"Validação do campo Fabricante\", () => pm.expect(pm.response.json().errors).to.have.property(\"Fabricante\")); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/Trem",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Trem"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"TREM-{{$guid}}\",\n  \"modelo\": \"Modelo de teste\",\n  \"fabricante\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PUT: rejeitar modelo acima de 100 caracteres",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"tremId\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erro em JSON\", () => pm.expect((pm.response.headers.get(\"Content-Type\") || \"\").includes(\"json\")).to.eql(true));",
+                  "if (pm.response.code === 400) { pm.test(\"Validação do campo Modelo\", () => pm.expect(pm.response.json().errors).to.have.property(\"Modelo\")); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/Trem/{{tremId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Trem",
+                "{{tremId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"TREM-EDIT-{{$guid}}\",\n  \"modelo\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\n  \"fabricante\": \"Fabricante atualizado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PUT: rejeitar fabricante acima de 100 caracteres",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9]\\d*$/.test(String(pm.collectionVariables.get(\"tremId\") || \"\"))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erro em JSON\", () => pm.expect((pm.response.headers.get(\"Content-Type\") || \"\").includes(\"json\")).to.eql(true));",
+                  "if (pm.response.code === 400) { pm.test(\"Validação do campo Fabricante\", () => pm.expect(pm.response.json().errors).to.have.property(\"Fabricante\")); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/Trem/{{tremId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Trem",
+                "{{tremId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"TREM-EDIT-{{$guid}}\",\n  \"modelo\": \"Modelo atualizado\",\n  \"fabricante\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

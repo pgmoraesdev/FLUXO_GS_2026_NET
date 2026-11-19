@@ -104,9 +104,7 @@ Cada atualização substitui a ocupação anterior. O protótipo guarda a contag
 ├── Migrations/
 ├── Program.cs
 ├── appsettings.json
-├── Fluxo.postman_collection.json
-├── Fluxo.demonstracao.postman_collection.json
-└── DEMONSTRACAO.md
+└── Fluxo.postman_collection.json
 ```
 
 - **Models** representa as entidades persistidas no banco.
@@ -115,7 +113,7 @@ Cada atualização substitui a ocupação anterior. O protótipo guarda a contag
 - **Data** configura o contexto e os relacionamentos usados pelo Entity Framework Core.
 - **Migrations** registra as alterações na estrutura do Oracle.
 - **Program.cs** configura os controllers, a conexão com o banco e a documentação interativa da API.
-- **Coleções Postman** fornecem exemplos para testar os CRUDs e apresentar o protótipo.
+- **Coleção Postman** fornece exemplos para testar os CRUDs e apresentar o protótipo.
 
 ## Funcionalidades
 
@@ -205,8 +203,6 @@ Substitua `Entidade` pelo nome da rota desejada. As consultas específicas são 
 | Lotação de um vagão | `GET /api/Vagao/{id}/lotacao` |
 | Lotação do trem, por posição | `GET /api/Trem/{id}/lotacao` |
 | Comparação entre plataforma e trem | `GET /api/Plataforma/{id}/avaliar-capacidade?tremId={idDoTrem}` |
-
-Para apresentar o projeto, use a coleção menor `Fluxo.demonstracao.postman_collection.json` e siga o roteiro em [DEMONSTRACAO.md](DEMONSTRACAO.md).
 
 ## Persistência dos dados
 
