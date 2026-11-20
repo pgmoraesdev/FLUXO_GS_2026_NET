@@ -17,6 +17,19 @@ Este projeto é a API da solução CitizenTech desenvolvida para a Global Soluti
 | Mateus Ribeiro Azevedo | 566630 |
 | Paulo Gustavo Moraes de Sousa | 568580 |
 
+## Cidadão beneficiado
+O público principal são os passageiros de metrô e trem que enfrentam lotação e dificuldade de embarque no deslocamento diário, incluindo estudantes e trabalhadores. A proposta é oferecer informação sobre a distribuição de passageiros para apoiar a escolha de um vagão menos ocupado.
+
+As equipes de operação também se beneficiam da visualização da ocupação, dos eventos que podem aumentar a demanda e do registro de solicitações de reforço. Esses recursos buscam apoiar decisões sobre o serviço prestado ao cidadão.
+
+## ODS relacionados
+ODS	Relação com a proposta
+ODS 11 - Cidades e comunidades sustentáveis	É o principal alinhamento do FLUXO. A meta 11.2 trata do acesso ao transporte seguro, acessível e sustentável e da ampliação do transporte público. A proposta busca apoiar esse objetivo com informação sobre lotação e demanda.
+ODS 9 - Indústria, inovação e infraestrutura	Como alinhamento complementar à meta 9.1, o projeto propõe usar informação e tecnologia para apoiar a gestão da infraestrutura de mobilidade e a qualidade do serviço.
+As relações acima representam o alinhamento proposto para a solução; o protótipo não mede o cumprimento dessas metas. Referências: ODS 11, ONU e ODS 9, ONU.
+
+
+
 ## O que foi desenvolvido
 
 Foi desenvolvida uma API REST em **C# com ASP.NET Core 8**, utilizando controllers, **Entity Framework Core** e persistência no **Oracle da FIAP**. As alterações do banco são versionadas por migrations.
